@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "updatedAt": "2026-09-22",
+    "exchangeRate": 0.048
+  },
+  "kits": [
+    {
+      "id": "mg-freedom-2",
+      "name": "MG 自由 2.0",
+      "series": "MG",
+      "officialPriceJPY": 4500,
+      "channels": [
+        { "platform": "pdd", "marketType": "行货", "price": 280, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "pdd", "marketType": "水货", "price": 230, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "taobao", "marketType": "行货", "price": 300, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "xianyu", "marketType": "水货", "price": 245, "updatedDate": "2026-09-22", "url": "" }
+      ]
+    },
+    {
+      "id": "mgex-strike-freedom",
+      "name": "MGEX 强袭自由",
+      "series": "MGEX",
+      "officialPriceJPY": 14000,
+      "channels": [
+        { "platform": "pdd", "marketType": "行货", "price": 950, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "pdd", "marketType": "水货", "price": 780, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "taobao", "marketType": "行货", "price": 920, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "xianyu", "marketType": "水货", "price": 850, "updatedDate": "2026-09-22", "url": "" }
+      ]
+    },
+    {
+      "id": "mg-unicorn",
+      "name": "MG 独角兽",
+      "series": "MG",
+      "officialPriceJPY": 8000,
+      "channels": [
+        { "platform": "pdd", "marketType": "行货", "price": 450, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "pdd", "marketType": "水货", "price": 380, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "taobao", "marketType": "行货", "price": 430, "updatedDate": "2026-09-22", "url": "" },
+        { "platform": "xianyu", "marketType": "水货", "price": 366, "updatedDate": "2026-09-22", "url": "" }
+      ]
+    }
+  ]
+}

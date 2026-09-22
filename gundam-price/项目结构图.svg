@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 680" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <rect width="960" height="680" fill="#f5f6f8"/>
+
+  <text x="480" y="46" text-anchor="middle" font-size="24" font-weight="bold" fill="#1f2937">「高达行情」MVP · 项目结构与数据流（Day 7）</text>
+
+  <!-- ===== 上半部分：数据流 ===== -->
+  <text x="60" y="92" font-size="16" font-weight="bold" fill="#374151">数据怎么流动</text>
+
+  <!-- 你 -->
+  <rect x="60" y="120" width="170" height="64" rx="8" fill="#ffffff" stroke="#1f2937" stroke-width="2"/>
+  <text x="145" y="147" text-anchor="middle" font-size="15" font-weight="bold" fill="#1f2937">我（Master）</text>
+  <text x="145" y="169" text-anchor="middle" font-size="12" fill="#6b7280">每天手动改价格</text>
+
+  <line x1="230" y1="152" x2="330" y2="152" stroke="#1f2937" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="280" y="142" text-anchor="middle" font-size="11" fill="#6b7280">编辑保存</text>
+
+  <!-- data.json -->
+  <rect x="335" y="120" width="180" height="64" rx="8" fill="#fef3c7" stroke="#92400e" stroke-width="2"/>
+  <text x="425" y="147" text-anchor="middle" font-size="15" font-weight="bold" fill="#92400e">data/data.json</text>
+  <text x="425" y="169" text-anchor="middle" font-size="12" fill="#92400e">唯一数据源</text>
+
+  <line x1="515" y1="152" x2="615" y2="152" stroke="#1f2937" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="565" y="142" text-anchor="middle" font-size="11" fill="#6b7280">fetch 读取</text>
+
+  <!-- 浏览器两个页面 -->
+  <rect x="620" y="86" width="280" height="56" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="760" y="110" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d4ed8">index.html + js/main.js</text>
+  <text x="760" y="130" text-anchor="middle" font-size="12" fill="#1d4ed8">首页：3 张机体卡片</text>
+
+  <rect x="620" y="162" width="280" height="56" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="760" y="186" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d4ed8">detail.html + js/detail.js</text>
+  <text x="760" y="206" text-anchor="middle" font-size="12" fill="#1d4ed8">详情页：五算基准 / 渠道比价 / 档位</text>
+
+  <!-- 首页点击到详情 -->
+  <path d="M 760 142 L 760 162" stroke="#1d4ed8" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <text x="855" y="156" font-size="11" fill="#6b7280">点击卡片 → ?id=xxx</text>
+
+  <!-- 去购买 -->
+  <path d="M 900 190 C 940 190 940 260 900 260 L 480 260" stroke="#166534" stroke-width="2" fill="none" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+  <rect x="330" y="238" width="150" height="44" rx="8" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+  <text x="405" y="256" text-anchor="middle" font-size="13" font-weight="bold" fill="#166534">去购买</text>
+  <text x="405" y="273" text-anchor="middle" font-size="11" fill="#166534">拼多多 / 淘宝 / 闲鱼</text>
+
+  <line x1="425" y1="184" x2="425" y2="238" stroke="#166534" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="6 4"/>
+
+  <!-- ===== 下半部分：文件夹结构 ===== -->
+  <text x="60" y="330" font-size="16" font-weight="bold" fill="#374151">文件夹里有什么</text>
+
+  <rect x="60" y="350" width="520" height="290" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.5"/>
+  <text x="90" y="386" font-size="14" fill="#1f2937" font-family="Consolas, monospace">vibecoding打卡project/</text>
+  <text x="120" y="414" font-size="14" fill="#1f2937" font-family="Consolas, monospace">├── gundam-price/          ← 高达行情全部内容都在这</text>
+  <text x="170" y="442" font-size="14" fill="#1f2937" font-family="Consolas, monospace">├── index.html             首页（机体列表）</text>
+  <text x="170" y="470" font-size="14" fill="#1f2937" font-family="Consolas, monospace">├── detail.html            详情页</text>
+  <text x="170" y="498" font-size="14" fill="#1f2937" font-family="Consolas, monospace">├── css/style.css          全站样式（含手机适配）</text>
+  <text x="170" y="526" font-size="14" fill="#1f2937" font-family="Consolas, monospace">├── js/main.js             首页逻辑：读数据、渲染卡片</text>
+  <text x="170" y="554" font-size="14" fill="#1f2937" font-family="Consolas, monospace">├── js/detail.js           详情逻辑：五算、比价、档位</text>
+  <text x="170" y="582" font-size="14" fill="#1f2937" font-family="Consolas, monospace">├── data/data.json         数据源（每天手动编辑）</text>
+  <text x="170" y="610" font-size="14" fill="#1f2937" font-family="Consolas, monospace">└── 运行说明.md             启动命令与排错</text>
+
+  <!-- 右侧：本地运行方式 -->
+  <rect x="620" y="350" width="280" height="290" rx="8" fill="#1f2937"/>
+  <text x="648" y="386" font-size="14" font-weight="bold" fill="#ffffff">本地怎么跑起来</text>
+  <text x="648" y="418" font-size="13" fill="#cbd5e1">cd gundam-price</text>
+  <text x="648" y="444" font-size="13" fill="#cbd5e1">python -m http.server 8000</text>
+  <text x="648" y="480" font-size="13" fill="#ffffff">浏览器打开</text>
+  <text x="648" y="504" font-size="13" fill="#93c5fd">http://localhost:8000</text>
+  <text x="648" y="540" font-size="12" fill="#9ca3af">改完 data.json 后</text>
+  <text x="648" y="562" font-size="12" fill="#9ca3af">Ctrl + Shift + R 强制刷新</text>
+  <text x="648" y="600" font-size="12" fill="#9ca3af">⚠ 双击 HTML 打不开数据，</text>
+  <text x="648" y="620" font-size="12" fill="#9ca3af">必须走本地服务器</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#374151"/>
+    </marker>
+  </defs>
+</svg>

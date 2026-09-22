@@ -1,0 +1,177 @@
+/* style.css ｜ 高达行情 全站样式（含手机端适配）
+   第 4 步：把原先内嵌在两个 HTML 里的临时样式收拢到这里 */
+
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --ink: #222222;
+  --ink-muted: #6b7280;
+  --ink-faint: #999999;
+  --brand: #1f2937;
+  --brand-ink: #cbd5e1;
+  --accent: #1d4ed8;
+  --accent-bg: #dbeafe;
+  --line: #e5e7eb;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------- 页头 ---------- */
+header {
+  background: var(--brand);
+  color: #fff;
+  padding: 16px 20px;
+}
+header h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  letter-spacing: 1px;
+}
+header .updated {
+  font-size: 13px;
+  color: var(--brand-ink);
+}
+
+/* ---------- 主体容器 ---------- */
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ---------- 首页：机体卡片 ---------- */
+#kit-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+.card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+}
+.card h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+.card .price {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+/* ---------- 系列标签 ---------- */
+.series {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+}
+
+/* ---------- 详情页：区块 ---------- */
+.panel {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+.panel h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+.ref {
+  font-size: 14px;
+  line-height: 1.9;
+}
+.back {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* ---------- 行情档位标签 ---------- */
+.tier {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 4px;
+  padding: 3px 10px;
+  margin-top: 6px;
+}
+.tier.bargain { color: #166534; background: #dcfce7; }  /* 捡漏 */
+.tier.fair    { color: #92400e; background: #fef3c7; }  /* 合理 */
+.tier.high    { color: #991b1b; background: #fee2e2; }  /* 溢价 */
+
+/* ---------- 渠道价格表 ---------- */
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th, td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 6px;
+  text-align: left;
+  white-space: nowrap;
+}
+th {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: normal;
+}
+.none { color: var(--ink-faint); }
+.buy-link { color: var(--accent); text-decoration: none; }
+
+/* ---------- 错误提示 ---------- */
+.error {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 20px;
+  color: #b91c1c;
+}
+
+/* ---------- 页脚：数据来源与免责说明 ---------- */
+footer {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 20px 30px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.8;
+}
+
+/* ---------- 手机端适配（窄屏单列） ---------- */
+@media (max-width: 600px) {
+  header { padding: 14px 16px; }
+  header h1 { font-size: 20px; }
+  main { padding: 14px; }
+  #kit-list { grid-template-columns: 1fr; gap: 12px; }
+  .card { padding: 14px 16px; }
+  .panel { padding: 14px 16px; }
+  footer { padding: 0 16px 24px; }
+  table { font-size: 13px; }
+  th, td { padding: 8px 4px; }
+}
