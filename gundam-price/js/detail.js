@@ -1,29 +1,10 @@
 // detail.js ｜ 详情页逻辑：按 URL 参数 ?id=xxx 找到机体，渲染五算参照、
 // 三渠道 × 行水货价格表和行情档位（捡漏 / 合理 / 溢价）
-
-// 与 main.js 同一套平台中文名
-const PLATFORM_NAMES = {
-  pdd: "拼多多",
-  taobao: "淘宝",
-  xianyu: "闲鱼"
-};
+// 价格算法与渠道名统一由组件 js/components/kit-card.js 提供（加练项抽出，避免两处各写一遍）
 
 // 从地址栏取 id：detail.html?id=mg-unicorn → "mg-unicorn"
 function getKitId() {
   return new URLSearchParams(location.search).get("id");
-}
-
-// 五算基准价 = 官方日元价 × 汇率
-// （TECH_DESIGN 5.4 原公式「×0.05×汇率」与自己的例子矛盾，2026-09-22 经 Master 拍板按例子修正）
-function fiveK基准(officialJPY, rate) {
-  return Math.round(officialJPY * rate);
-}
-
-// 行情档位：最低现价 < 五算 → 捡漏；五算 ~ 1.2 倍 → 合理；> 1.2 倍 → 溢价
-function tierOf(minPrice, base) {
-  if (minPrice < base) return { label: "捡漏", cls: "bargain" };
-  if (minPrice <= base * 1.2) return { label: "合理", cls: "fair" };
-  return { label: "溢价", cls: "high" };
 }
 
 // 渠道价格表：按拼多多 / 淘宝 / 闲鱼分组，每组下行货、水货两行
@@ -38,7 +19,7 @@ function channelTable(kit) {
       const buyHtml = row.url
         ? '<a class="buy-link" target="_blank" rel="noopener" href="' + row.url + '">去购买</a>'
         : '<span class="none">暂无链接</span>';
-      html += "<tr><td>" + PLATFORM_NAMES[platform] + "</td><td>" + row.marketType
+      html += "<tr><td>" + KitCard.PLATFORM_NAMES[platform] + "</td><td>" + row.marketType
             + "</td><td>" + priceHtml + "</td><td>" + row.updatedDate + "</td><td>" + buyHtml + "</td></tr>";
     }
   }
@@ -70,12 +51,10 @@ async function render() {
     return;
   }
 
-  const base = fiveK基准(kit.officialPriceJPY, data.meta.exchangeRate);
-  const prices = (kit.channels || [])
-    .map(c => c.price)
-    .filter(p => typeof p === "number" && p !== null);
-  const minPrice = Math.min(...prices);
-  const tier = prices.length ? tierOf(minPrice, base) : null;
+  const base = KitCard.fiveKBase(kit.officialPriceJPY, data.meta.exchangeRate);
+  const prices = KitCard.validPrices(kit);
+  const minPrice = prices.length ? Math.min(...prices) : null;
+  const tier = prices.length ? KitCard.tierOf(minPrice, base) : null;
 
   box.innerHTML =
     '<div class="panel">' +
