@@ -153,6 +153,75 @@ th {
   color: #b91c1c;
 }
 
+/* ---------- Day 8：卡片信息排布（档位、价格强调、销量对比） ---------- */
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.card-top .series { margin-bottom: 0; }
+.tier-small { font-size: 12px; padding: 2px 8px; margin-top: 0; }
+.card .price {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 2px 0 12px;
+}
+
+/* 销量对比条 */
+.sales { border-top: 1px dashed var(--line); padding-top: 10px; }
+.sales-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.sales-rank { color: var(--accent); font-weight: bold; }
+.sales-bar {
+  height: 8px;
+  background: var(--line);
+  border-radius: 4px;
+  margin: 6px 0 4px;
+  overflow: hidden;
+}
+.sales-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  border-radius: 4px;
+}
+.sales-num { font-size: 12px; color: var(--ink-faint); }
+
+/* ---------- Day 8：空 / 错误状态提示盒 ---------- */
+.state-box {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 32px 20px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+.state-emoji { font-size: 34px; margin-bottom: 8px; }
+.state-title { font-size: 16px; font-weight: bold; }
+.state-desc { font-size: 13px; color: var(--ink-muted); margin-top: 6px; }
+.state-error .state-title { color: #b91c1c; }
+
+/* ---------- Day 8：加载中骨架屏 ---------- */
+.skeleton { cursor: default; }
+.skeleton:hover { transform: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+.sk-line {
+  height: 14px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, #eceef1 25%, #f6f7f9 40%, #eceef1 55%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+.sk-tag   { width: 30%; height: 20px; }
+.sk-title { width: 60%; height: 18px; }
+.sk-price { width: 45%; height: 20px; }
+.sk-bar   { width: 100%; height: 8px; margin-top: 14px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
 /* ---------- 页脚：数据来源与免责说明 ---------- */
 footer {
   max-width: 880px;

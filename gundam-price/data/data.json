@@ -9,6 +9,7 @@
       "name": "MG 自由 2.0",
       "series": "MG",
       "officialPriceJPY": 4500,
+      "salesVolume": 1580,
       "channels": [
         { "platform": "pdd", "marketType": "行货", "price": 280, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "pdd", "marketType": "水货", "price": 230, "updatedDate": "2026-09-22", "url": "" },
@@ -21,6 +22,7 @@
       "name": "MGEX 强袭自由",
       "series": "MGEX",
       "officialPriceJPY": 14000,
+      "salesVolume": 620,
       "channels": [
         { "platform": "pdd", "marketType": "行货", "price": 950, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "pdd", "marketType": "水货", "price": 780, "updatedDate": "2026-09-22", "url": "" },
@@ -33,6 +35,7 @@
       "name": "MG 独角兽",
       "series": "MG",
       "officialPriceJPY": 8000,
+      "salesVolume": 1240,
       "channels": [
         { "platform": "pdd", "marketType": "行货", "price": 450, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "pdd", "marketType": "水货", "price": 380, "updatedDate": "2026-09-22", "url": "" },
