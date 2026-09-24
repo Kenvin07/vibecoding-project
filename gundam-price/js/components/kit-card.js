@@ -59,6 +59,8 @@ const KitCard = {
 
     const card = document.createElement("div");
     card.className = "card";
+    // Day 9：让键盘 Tab 能聚焦到卡片，按 Enter 等同点击（功能不变，只是多了键盘入口）
+    card.tabIndex = 0;
     card.innerHTML =
       '<div class="card-top">' +
         '<span class="series">' + kit.series + '</span>' +
@@ -77,6 +79,9 @@ const KitCard = {
     card.addEventListener("click", () => {
       if (typeof opts.onOpen === "function") opts.onOpen(kit);
       else location.href = "detail.html?id=" + kit.id;
+    });
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") card.click();
     });
 
     return card;

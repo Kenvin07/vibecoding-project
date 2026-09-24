@@ -63,7 +63,7 @@ async function render() {
       '<div class="ref">官方建议零售价：' + kit.officialPriceJPY.toLocaleString() + ' 日元<br>' +
       '五算基准价：约 ¥' + base + '（官方价 × 汇率 ' + data.meta.exchangeRate + '）</div>' +
       (tier
-        ? '<div>当前最低价 ¥' + minPrice + ' → 行情档位：<span class="tier ' + tier.cls + '">' + tier.label + '</span></div>'
+        ? '<div class="min-price">当前最低价 <span class="min-price-num">¥' + minPrice + '</span> → 行情档位：<span class="tier ' + tier.cls + '">' + tier.label + '</span></div>'
         : '<div class="none">暂无报价，无法判断档位</div>') +
     '</div>' +
     '<div class="panel"><h2>各渠道现价</h2><div class="table-wrap">' + channelTable(kit) + '</div></div>';

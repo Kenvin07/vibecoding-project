@@ -6,7 +6,7 @@
   --panel: #ffffff;
   --ink: #222222;
   --ink-muted: #6b7280;
-  --ink-faint: #999999;
+  --ink-faint: #6b7280;  /* Day 9：从 #999999 加深，对比度 2.8:1 → 4.8:1（WCAG AA 达标） */
   --brand: #1f2937;
   --brand-ink: #cbd5e1;
   --accent: #1d4ed8;
@@ -67,6 +67,11 @@ main {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
 }
+/* Day 9：键盘 Tab 聚焦到卡片时给出可见外框（与鼠标 hover 反馈对应） */
+.card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .card h2 {
   margin: 0 0 6px;
   font-size: 18px;
@@ -103,12 +108,25 @@ main {
   font-size: 14px;
   line-height: 1.9;
 }
+/* Day 9：详情页「当前最低价」是全页最关键的数字——加大加粗突出层级，
+   并与上方「官方零售价 / 五算基准」几行拉开间距 */
+.min-price { margin-top: 10px; font-size: 14px; }
+.min-price-num { font-size: 22px; font-weight: bold; }
 .back {
   display: inline-block;
   margin-bottom: 14px;
   color: var(--accent);
   text-decoration: none;
   font-size: 14px;
+}
+/* Day 9：链接的悬停与键盘焦点反馈 */
+.back:hover,
+.buy-link:hover { text-decoration: underline; }
+.back:focus-visible,
+.buy-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ---------- 行情档位标签 ---------- */
