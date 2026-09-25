@@ -75,8 +75,10 @@ const KitCard = {
     const pct = opts.maxSales ? Math.round((kit.salesVolume || 0) / opts.maxSales * 100) : 0;
 
     // Day 11：卡片顶部头雕横幅（图片加载失败自动换成文字占位，不出现裂图）
+    // Day 11 补充：每台机体的头部位置不同，imagePos 单独控制横幅对准哪里（默认 center 18%）
     const banner = kit.image
       ? '<div class="card-banner"><img src="img/' + kit.image + '" alt="' + kit.name + ' 头雕" loading="lazy"' +
+        ' style="object-position:' + (kit.imagePos || "center 18%") + '"' +
         ' onerror="this.parentNode.innerHTML=\'<div class=&quot;card-banner-ph&quot;>暂无图片</div>\'"></div>'
       : '<div class="card-banner"><div class="card-banner-ph">' + kit.series + '</div></div>';
 

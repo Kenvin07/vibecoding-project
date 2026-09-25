@@ -59,3 +59,12 @@ async function render() {
 }
 
 render();
+
+// Day 11 修复：点卡片会先进入「翻转中」状态（转到 90°）再跳详情页；
+// 从详情页按返回键时，浏览器把原页面从缓存原样恢复，卡片还卡在翻转姿势（看起来变白消失）。
+// 所以页面每次显示时（包括返回键触发的缓存恢复），把所有卡片的翻转状态清掉。
+window.addEventListener("pageshow", function () {
+  document.querySelectorAll(".card.flipping").forEach(function (c) {
+    c.classList.remove("flipping");
+  });
+});
