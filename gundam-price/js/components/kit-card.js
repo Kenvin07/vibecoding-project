@@ -40,6 +40,23 @@ const KitCard = {
       .filter(p => typeof p === "number" && p !== null);
   },
 
+  // ---- 历史价格工具（Day 10 走势图用，首页卡片与详情页共用） ----
+
+  // 近 N 天（默认 30）的历史价序列：过滤无效项后按日期升序排好
+  historySeries(kit, days = 30) {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    return (kit.history || [])
+      .filter(h => h && typeof h.price === "number" && new Date(h.date + "T00:00:00").getTime() >= cutoff)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+  },
+
+  // 近 N 天的最低价那条记录：{ date, price }，没有历史返回 null
+  historyMin(kit, days = 30) {
+    const series = this.historySeries(kit, days);
+    if (series.length === 0) return null;
+    return series.reduce((min, h) => (h.price < min.price ? h : min), series[0]);
+  },
+
   // 最低现价区间："¥230 ~ ¥300"；一个价就只显示一个；没报价给提示文案
   priceRange(prices) {
     if (prices.length === 0) return "暂无报价";
@@ -61,6 +78,8 @@ const KitCard = {
     card.className = "card";
     // Day 9：让键盘 Tab 能聚焦到卡片，按 Enter 等同点击（功能不变，只是多了键盘入口）
     card.tabIndex = 0;
+    // Day 10：有历史数据时多显示一行「近 30 天最低」
+    const hist = this.historyMin(kit);
     card.innerHTML =
       '<div class="card-top">' +
         '<span class="series">' + kit.series + '</span>' +
@@ -68,6 +87,7 @@ const KitCard = {
       '</div>' +
       '<h2>' + kit.name + '</h2>' +
       '<div class="price">' + this.priceRange(prices) + '</div>' +
+      (hist ? '<div class="hist-min">近 30 天最低 ¥' + hist.price + '（' + hist.date + '）</div>' : "") +
       '<div class="sales">' +
         '<div class="sales-label">销量对比' +
           (opts.rank ? '<span class="sales-rank">No.' + opts.rank + '</span>' : "") +

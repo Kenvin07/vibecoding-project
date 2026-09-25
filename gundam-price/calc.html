@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>五算计算器 ｜ 高达行情</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>五算计算器</h1>
+    <div class="updated">填官方日元价，立刻算出合理行情区间；填一个现价，判断贵不贵</div>
+  </header>
+
+  <main>
+    <a class="back" href="index.html">← 返回高达行情首页</a>
+
+    <!-- 第 1 步：选机体或填官方价 -->
+    <div class="panel">
+      <h2>① 官方日元价</h2>
+      <div class="calc-field">
+        <label for="kit-select">从收录机体里选（官方价自动带出）</label>
+        <select id="kit-select">
+          <option value="">— 自定义 / 手动填官方价 —</option>
+        </select>
+      </div>
+      <div class="calc-field">
+        <label for="jpy">官方建议零售价（日元）</label>
+        <input id="jpy" type="number" min="0" inputmode="numeric" placeholder="例如 4500">
+      </div>
+    </div>
+
+    <!-- 第 2 步：填现价判断档位（可选） -->
+    <div class="panel">
+      <h2>② 现价判断（可跳过）</h2>
+      <div class="calc-field">
+        <label for="market">你看到的现价（人民币元）</label>
+        <input id="market" type="number" min="0" inputmode="decimal" placeholder="例如 230">
+      </div>
+    </div>
+
+    <!-- 第 3 步：结果 -->
+    <div class="panel">
+      <h2>③ 结果</h2>
+      <div id="result-box" class="ref">填好官方日元价后，这里显示五算基准与各档位的价格分界。</div>
+    </div>
+  </main>
+
+  <footer>
+    「五算」＝日本官方建议零售价 × 汇率的圈内经验标尺（本页汇率与数据文件保持一致）；档位标准与详情页相同：低于五算 = 捡漏，五算 ~ 1.2 倍 = 合理，超过 1.2 倍 = 溢价。对冷门限定款不适用。
+  </footer>
+
+  <!-- 复用卡片组件里的五算算法与档位判断（与详情页同一套口径） -->
+  <script src="js/components/kit-card.js"></script>
+  <script src="js/calc.js"></script>
+</body>
+</html>

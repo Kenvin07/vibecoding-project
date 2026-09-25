@@ -250,6 +250,40 @@ footer {
   line-height: 1.8;
 }
 
+/* ---------- 五算计算器（calc.html） ---------- */
+.calc-field { margin-bottom: 12px; }
+.calc-field:last-child { margin-bottom: 0; }
+.calc-field label {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}
+.calc-field select,
+.calc-field input {
+  width: 100%;
+  max-width: 320px;
+  font-size: 15px;
+  font-family: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+}
+.calc-field select:focus-visible,
+.calc-field input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+#result-box strong { font-size: 20px; }
+
+/* ---------- 价格走势图（detail.html，Day 10） ---------- */
+/* Chart.js 响应式画布需要一个有高度的父容器，否则画成 0 高看不见 */
+.chart-wrap { position: relative; height: 260px; }
+.hist-min { font-size: 13px; color: var(--ink-muted); margin: 4px 0 12px; }
+
 /* ---------- 手机端适配（窄屏单列） ---------- */
 @media (max-width: 600px) {
   header { padding: 14px 16px; }

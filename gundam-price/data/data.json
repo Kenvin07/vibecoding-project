@@ -15,6 +15,9 @@
         { "platform": "pdd", "marketType": "水货", "price": 230, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "taobao", "marketType": "行货", "price": 300, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "xianyu", "marketType": "水货", "price": 245, "updatedDate": "2026-09-22", "url": "" }
+      ],
+      "history": [
+        { "date": "2026-09-22", "price": 230 }
       ]
     },
     {
@@ -28,6 +31,9 @@
         { "platform": "pdd", "marketType": "水货", "price": 780, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "taobao", "marketType": "行货", "price": 920, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "xianyu", "marketType": "水货", "price": 850, "updatedDate": "2026-09-22", "url": "" }
+      ],
+      "history": [
+        { "date": "2026-09-22", "price": 780 }
       ]
     },
     {
@@ -41,6 +47,9 @@
         { "platform": "pdd", "marketType": "水货", "price": 380, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "taobao", "marketType": "行货", "price": 430, "updatedDate": "2026-09-22", "url": "" },
         { "platform": "xianyu", "marketType": "水货", "price": 366, "updatedDate": "2026-09-22", "url": "" }
+      ],
+      "history": [
+        { "date": "2026-09-22", "price": 366 }
       ]
     }
   ]

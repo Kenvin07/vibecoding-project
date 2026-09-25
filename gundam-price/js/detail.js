@@ -26,6 +26,56 @@ function channelTable(kit) {
   return html + "</table>";
 }
 
+// 走势图：每日最低价折线 + 五算基准虚线（同一张图方便对比）
+// Chart.js 没加载成功（断网等）→ 显示文字兜底，页面不白屏
+function renderTrendChart(kit, base) {
+  const wrap = document.getElementById("trend-wrap");
+  if (!wrap) return;
+  const series = KitCard.historySeries(kit);
+  if (series.length === 0) {
+    wrap.innerHTML = '<span class="none">暂无历史数据，每天更新价格后会自动长出走势线。</span>';
+    return;
+  }
+  if (typeof Chart === "undefined") {
+    wrap.innerHTML = '<span class="none">图表库加载失败（可能没联网），价格数据仍在下方表格中。</span>';
+    return;
+  }
+  const labels = series.map(h => h.date.slice(5));  // "2026-09-22" → "09-22"
+  const prices = series.map(h => h.price);
+  new Chart(document.getElementById("trend-chart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "每日最低价",
+          data: prices,
+          borderColor: "#1d4ed8",
+          backgroundColor: "#dbeafe",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4
+        },
+        {
+          label: "五算基准价",
+          data: labels.map(() => base),
+          borderColor: "#92400e",
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { ticks: { callback: v => "¥" + v } }
+      }
+    }
+  });
+}
+
 async function render() {
   const box = document.getElementById("detail");
   const updatedEl = document.getElementById("updated-at");
@@ -66,7 +116,17 @@ async function render() {
         ? '<div class="min-price">当前最低价 <span class="min-price-num">¥' + minPrice + '</span> → 行情档位：<span class="tier ' + tier.cls + '">' + tier.label + '</span></div>'
         : '<div class="none">暂无报价，无法判断档位</div>') +
     '</div>' +
-    '<div class="panel"><h2>各渠道现价</h2><div class="table-wrap">' + channelTable(kit) + '</div></div>';
+    '<div class="panel"><h2>各渠道现价</h2><div class="table-wrap">' + channelTable(kit) + '</div></div>' +
+    '<div class="panel"><h2>价格走势（近 30 天每日最低价）</h2>' +
+      '<div class="chart-wrap" id="trend-wrap"><canvas id="trend-chart"></canvas></div>' +
+      (function () {
+        const hist = KitCard.historyMin(kit);
+        return hist ? '<div class="min-price">近 30 天最低 <span class="min-price-num">¥' + hist.price + '</span>（' + hist.date + '）</div>' : "";
+      })() +
+    '</div>';
+
+  // HTML 已经挂到页面上，canvas 存在了，才能画图
+  renderTrendChart(kit, base);
 }
 
 render();
