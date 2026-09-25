@@ -74,31 +74,41 @@ const KitCard = {
     const tier = prices.length ? this.tierOf(Math.min(...prices), base) : null;
     const pct = opts.maxSales ? Math.round((kit.salesVolume || 0) / opts.maxSales * 100) : 0;
 
+    // Day 11：卡片顶部头雕横幅（图片加载失败自动换成文字占位，不出现裂图）
+    const banner = kit.image
+      ? '<div class="card-banner"><img src="img/' + kit.image + '" alt="' + kit.name + ' 头雕" loading="lazy"' +
+        ' onerror="this.parentNode.innerHTML=\'<div class=&quot;card-banner-ph&quot;>暂无图片</div>\'"></div>'
+      : '<div class="card-banner"><div class="card-banner-ph">' + kit.series + '</div></div>';
+
     const card = document.createElement("div");
     card.className = "card";
     // Day 9：让键盘 Tab 能聚焦到卡片，按 Enter 等同点击（功能不变，只是多了键盘入口）
     card.tabIndex = 0;
     // Day 10：有历史数据时多显示一行「近 30 天最低」
     const hist = this.historyMin(kit);
-    card.innerHTML =
-      '<div class="card-top">' +
-        '<span class="series">' + kit.series + '</span>' +
-        (tier ? '<span class="tier tier-small ' + tier.cls + '">' + tier.label + '</span>' : "") +
-      '</div>' +
-      '<h2>' + kit.name + '</h2>' +
-      '<div class="price">' + this.priceRange(prices) + '</div>' +
-      (hist ? '<div class="hist-min">近 30 天最低 ¥' + hist.price + '（' + hist.date + '）</div>' : "") +
-      '<div class="sales">' +
+    card.innerHTML = banner +
+      '<div class="card-body">' +
+        '<div class="card-top">' +
+          '<span class="series">' + kit.series + '</span>' +
+          (tier ? '<span class="tier tier-small ' + tier.cls + '">' + tier.label + '</span>' : "") +
+        '</div>' +
+        '<h2>' + kit.name + '</h2>' +
+        '<div class="price">' + this.priceRange(prices) + '</div>' +
+        (hist ? '<div class="hist-min">近 30 天最低 ¥' + hist.price + '（' + hist.date + '）</div>' : "") +
+        '<div class="sales">' +
         '<div class="sales-label">销量对比' +
           (opts.rank ? '<span class="sales-rank">No.' + opts.rank + '</span>' : "") +
         '</div>' +
         '<div class="sales-bar"><span style="width:' + pct + '%"></span></div>' +
         '<div class="sales-num">本期收录机型对比 · 月销约 ' + (kit.salesVolume || 0) + ' 台</div>' +
-      '</div>';
+      '</div>' +
+    '</div>';
 
     card.addEventListener("click", () => {
-      if (typeof opts.onOpen === "function") opts.onOpen(kit);
-      else location.href = "detail.html?id=" + kit.id;
+      if (typeof opts.onOpen === "function") { opts.onOpen(kit); return; }
+      // Day 11：立体翻转过场——卡片先绕竖轴翻转 90°，再进详情页
+      card.classList.add("flipping");
+      setTimeout(() => { location.href = "detail.html?id=" + kit.id; }, 300);
     });
     card.addEventListener("keydown", (e) => {
       if (e.key === "Enter") card.click();

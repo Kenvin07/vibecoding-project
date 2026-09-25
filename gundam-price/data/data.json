@@ -8,6 +8,7 @@
       "id": "mg-freedom-2",
       "name": "MG 自由 2.0",
       "series": "MG",
+      "image": "mg-freedom-2.jpg",
       "officialPriceJPY": 4500,
       "salesVolume": 1580,
       "channels": [
@@ -24,6 +25,7 @@
       "id": "mgex-strike-freedom",
       "name": "MGEX 强袭自由",
       "series": "MGEX",
+      "image": "mgex-strike-freedom.jpg",
       "officialPriceJPY": 14000,
       "salesVolume": 620,
       "channels": [
@@ -40,6 +42,7 @@
       "id": "mg-unicorn",
       "name": "MG 独角兽",
       "series": "MG",
+      "image": "mg-unicorn.jpg",
       "officialPriceJPY": 8000,
       "salesVolume": 1240,
       "channels": [

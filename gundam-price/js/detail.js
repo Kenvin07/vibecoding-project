@@ -107,14 +107,20 @@ async function render() {
   const tier = prices.length ? KitCard.tierOf(minPrice, base) : null;
 
   box.innerHTML =
-    '<div class="panel">' +
-      '<h2>' + kit.name + '</h2>' +
-      '<span class="series">' + kit.series + '</span>' +
-      '<div class="ref">官方建议零售价：' + kit.officialPriceJPY.toLocaleString() + ' 日元<br>' +
-      '五算基准价：约 ¥' + base + '（官方价 × 汇率 ' + data.meta.exchangeRate + '）</div>' +
-      (tier
-        ? '<div class="min-price">当前最低价 <span class="min-price-num">¥' + minPrice + '</span> → 行情档位：<span class="tier ' + tier.cls + '">' + tier.label + '</span></div>'
-        : '<div class="none">暂无报价，无法判断档位</div>') +
+    '<div class="panel hero">' +
+      (kit.image
+        ? '<img class="kit-img" src="img/' + kit.image + '" alt="' + kit.name + ' 机体图"' +
+          ' onerror="this.style.display=\'none\'">'
+        : "") +
+      '<div class="hero-info">' +
+        '<h2>' + kit.name + '</h2>' +
+        '<span class="series">' + kit.series + '</span>' +
+        '<div class="ref">官方建议零售价：' + kit.officialPriceJPY.toLocaleString() + ' 日元<br>' +
+        '五算基准价：约 ¥' + base + '（官方价 × 汇率 ' + data.meta.exchangeRate + '）</div>' +
+        (tier
+          ? '<div class="min-price">当前最低价 <span class="min-price-num">¥' + minPrice + '</span> → 行情档位：<span class="tier ' + tier.cls + '">' + tier.label + '</span></div>'
+          : '<div class="none">暂无报价，无法判断档位</div>') +
+      '</div>' +
     '</div>' +
     '<div class="panel"><h2>各渠道现价</h2><div class="table-wrap">' + channelTable(kit) + '</div></div>' +
     '<div class="panel"><h2>价格走势（近 30 天每日最低价）</h2>' +

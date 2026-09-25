@@ -57,16 +57,51 @@ main {
 }
 .card {
   background: var(--panel);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 16px 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+  padding: 0;
+  overflow: hidden;
   cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease;
+  /* Day 11：双层阴影制造悬浮立体感 */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .12), 0 2px 6px rgba(0, 0, 0, .08);
+  transition: transform .18s ease, box-shadow .18s ease;
 }
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, .18), 0 4px 10px rgba(0, 0, 0, .10);
 }
+/* Day 11：点击卡片时的立体翻转过场（翻到 90° 侧对视线后跳转详情页） */
+.card.flipping {
+  transform: perspective(600px) rotateY(90deg);
+  opacity: .4;
+  transition: transform .3s ease-in, opacity .3s ease-in;
+}
+/* Day 11：卡片顶部头雕横幅（图片自动裁切填满，头部保持在画面内） */
+.card-banner {
+  height: 120px;
+  background: var(--bg);
+  position: relative;
+}
+.card-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  display: block;
+}
+.card-banner-ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-faint);
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+.card-body { padding: 12px 20px 16px; }
+/* Day 11：内容挪进 card-body 后，骨架屏自己补回内边距 */
+.skeleton { padding: 16px 20px; }
 /* Day 9：键盘 Tab 聚焦到卡片时给出可见外框（与鼠标 hover 反馈对应） */
 .card:focus-visible {
   outline: 2px solid var(--accent);
@@ -99,6 +134,21 @@ main {
   padding: 16px 20px;
   margin-bottom: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+/* Day 11：详情页英雄区——左边完整机体图，右边名称与价格参照 */
+.hero { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.kit-img {
+  width: 190px;
+  max-width: 45%;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  /* Day 11：图片以「翻回来」的 3D 动画登场，与首页卡片的翻转过场呼应 */
+  animation: flip-in .45s ease-out both;
+}
+.hero-info { flex: 1; min-width: 220px; }
+@keyframes flip-in {
+  from { transform: perspective(800px) rotateY(85deg); opacity: 0; }
+  to   { transform: perspective(800px) rotateY(0deg);  opacity: 1; }
 }
 .panel h2 {
   margin: 0 0 6px;
@@ -225,7 +275,7 @@ th {
 
 /* ---------- Day 8：加载中骨架屏 ---------- */
 .skeleton { cursor: default; }
-.skeleton:hover { transform: none; box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+.skeleton:hover { transform: none; box-shadow: 0 8px 20px rgba(0, 0, 0, .12), 0 2px 6px rgba(0, 0, 0, .08); }
 .sk-line {
   height: 14px;
   border-radius: 4px;
