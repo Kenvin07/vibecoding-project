@@ -5,7 +5,7 @@
 //
 //   KitCard.renderList(容器, 机体数组, { rate: 汇率 })   // 成功态：渲染卡片列表
 //   KitCard.renderSkeleton(容器, 3)                      // 加载态：渲染骨架卡片
-//   KitCard.create(单台机体, { rate, maxSales, rank })   // 单张卡片，返回 DOM 节点
+//   KitCard.create(单台机体, { rate, onOpen })           // 单张卡片，返回 DOM 节点
 //
 // 价格工具（详情页也在用，避免两处算法各写一遍）：
 //   KitCard.fiveKBase(官方日元价, 汇率)   KitCard.tierOf(最低现价, 五算基准)
@@ -66,13 +66,21 @@ const KitCard = {
   },
 
   // 造一张卡片，返回 DOM 节点（不改动页面，方便将来放进别的容器里）
-  // opts: { rate 汇率, maxSales 本期销量王, rank 销量排名, onOpen 点击回调 }
+  // opts: { rate 汇率, onOpen 点击回调 }
   create(kit, opts = {}) {
     const rate = opts.rate;
     const prices = this.validPrices(kit);
     const base = this.fiveKBase(kit.officialPriceJPY, rate);
     const tier = prices.length ? this.tierOf(Math.min(...prices), base) : null;
-    const pct = opts.maxSales ? Math.round((kit.salesVolume || 0) / opts.maxSales * 100) : 0;
+    // Day 10 修改：卡片底部对比条由「销量对比」换成「价格对比」
+    // 原因：月销量是 data.json 里手动录入的估计值（salesVolume），没有真实来源，
+    //       且本期只收录 3 台、价位段不同，拿销量排名容易误导，故整块撤掉。
+    // 新逻辑：以「1.2 × 五算基准」（溢价线）为满格，条宽 = 最低现价占满格的比例；
+    //         条上的竖线 = 五算基准位置（1 ÷ 1.2 ≈ 83.33%），条没到竖线就是捡漏。
+    const minPrice = prices.length ? Math.min(...prices) : null;
+    const pct = (minPrice !== null && base > 0)
+      ? Math.min(100, Math.round(minPrice / (base * 1.2) * 100))
+      : 0;
 
     // Day 11：卡片顶部头雕横幅（图片加载失败自动换成文字占位，不出现裂图）
     // Day 11 补充：每台机体的头部位置不同，imagePos 单独控制横幅对准哪里（默认 center 18%）
@@ -98,11 +106,11 @@ const KitCard = {
         '<div class="price">' + this.priceRange(prices) + '</div>' +
         (hist ? '<div class="hist-min">近 30 天最低 ¥' + hist.price + '（' + hist.date + '）</div>' : "") +
         '<div class="sales">' +
-        '<div class="sales-label">销量对比' +
-          (opts.rank ? '<span class="sales-rank">No.' + opts.rank + '</span>' : "") +
-        '</div>' +
-        '<div class="sales-bar"><span style="width:' + pct + '%"></span></div>' +
-        '<div class="sales-num">本期收录机型对比 · 月销约 ' + (kit.salesVolume || 0) + ' 台</div>' +
+        '<div class="sales-label">价格对比<span class="sales-hint">竖线 = 五算基准</span></div>' +
+        '<div class="sales-bar"><span style="width:' + pct + '%"></span><i class="base-mark"></i></div>' +
+        '<div class="sales-num">' + (minPrice !== null
+          ? "最低现价 ¥" + minPrice + " · 五算基准 ¥" + base
+          : "暂无报价，无法对比") + '</div>' +
       '</div>' +
     '</div>';
 
@@ -119,15 +127,11 @@ const KitCard = {
     return card;
   },
 
-  // 成功态：把一列机体渲染进容器（会先清空容器；销量条按本期最高销量等比画）
+  // 成功态：把一列机体渲染进容器（会先清空容器；Day 10 起卡片底部为价格对比条）
   renderList(container, kits, opts = {}) {
-    const maxSales = kits.length ? Math.max(...kits.map(k => k.salesVolume || 0)) : 0;
-    const bySales = [...kits].sort((a, b) => (b.salesVolume || 0) - (a.salesVolume || 0));
-
     container.innerHTML = "";
     for (const kit of kits) {
-      const rank = bySales.findIndex(k => k.id === kit.id) + 1;
-      container.appendChild(this.create(kit, Object.assign({}, opts, { maxSales, rank })));
+      container.appendChild(this.create(kit, opts));
     }
   },
 

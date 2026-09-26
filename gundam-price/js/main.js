@@ -49,7 +49,7 @@ async function render() {
       renderEmpty(listEl); // ③ 空
       return;
     }
-    // ② 成功：交给组件渲染卡片列表（销量条自动按最高销量等比）
+    // ② 成功：交给组件渲染卡片列表（Day 10 起卡片底部为价格对比条）
     KitCard.renderList(listEl, data.kits, { rate: data.meta.exchangeRate });
   } catch (err) {
     updatedEl.textContent = "";
