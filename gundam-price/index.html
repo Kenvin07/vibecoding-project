@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>高达行情</title>
-  <link rel="stylesheet" href="css/style.css?v=20260926">
+  <link rel="stylesheet" href="css/style.css?v=20260927">
 </head>
 <body>
   <header>
@@ -22,8 +22,9 @@
     「五算」＝日本官方建议零售价 × 汇率（圈内经验值约等于官方价的 0.05），是常用的行情标尺，对冷门限定款不适用。
   </footer>
 
-  <!-- 卡片组件先引，首页逻辑再引（顺序不能反） -->
-  <script src="js/components/kit-card.js?v=20260926"></script>
+  <!-- 收藏模块先引，卡片组件再引（点按钮时要用到 Favorite）；最后才是首页逻辑 -->
+  <script src="js/favorite.js?v=20260927b"></script>
+  <script src="js/components/kit-card.js?v=20260927b"></script>
   <script src="js/main.js?v=20260926"></script>
 </body>
 </html>

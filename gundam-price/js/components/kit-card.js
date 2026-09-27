@@ -90,6 +90,30 @@ const KitCard = {
         ' onerror="this.parentNode.innerHTML=\'<div class=&quot;card-banner-ph&quot;>暂无图片</div>\'"></div>'
       : '<div class="card-banner"><div class="card-banner-ph">' + kit.series + '</div></div>';
 
+    // Day 11（下午）：收藏按钮，浮在头雕横幅右上角。
+    // 放在卡片这一层而不是 banner 里：banner 的图片加载失败时会整块重写 innerHTML，
+    // 放里面会被一起清掉；放外面绝对定位，也不挤动现有布局。
+    const favBtn = document.createElement("button");
+    favBtn.type = "button";
+    favBtn.className = "fav-btn";
+    favBtn.setAttribute("aria-pressed", "false");
+    favBtn.title = "收藏这台机体（按住 Shift 点 = 模拟保存失败）";
+    favBtn.innerHTML = '<span class="fav-star">☆</span><span class="fav-text">收藏</span>';
+    // 刷新后卡片重画，按 localStorage 里的记录把老收藏直接摆成「已收藏」姿势
+    if (Favorite.isFav(kit.id)) {
+      favBtn.classList.add("active");
+      favBtn.setAttribute("aria-pressed", "true");
+      favBtn.querySelector(".fav-star").textContent = "★";
+      favBtn.querySelector(".fav-text").textContent = "已收藏";
+    }
+    // stopPropagation：点收藏按钮时不许冒泡到卡片，否则会触发「翻转→跳详情页」
+    favBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // 测试口子：按住 Shift 点 = 这一次保存必定失败（模拟网络错误，详见 favorite.js）
+      if (e.shiftKey) Favorite.armFail();
+      Favorite.toggle(kit.id, favBtn);
+    });
+
     const card = document.createElement("div");
     card.className = "card";
     // Day 9：让键盘 Tab 能聚焦到卡片，按 Enter 等同点击（功能不变，只是多了键盘入口）
@@ -113,6 +137,7 @@ const KitCard = {
           : "暂无报价，无法对比") + '</div>' +
       '</div>' +
     '</div>';
+    card.appendChild(favBtn); // 收藏按钮最后挂上去，浮在横幅右上角
 
     card.addEventListener("click", () => {
       if (typeof opts.onOpen === "function") { opts.onOpen(kit); return; }
@@ -121,6 +146,9 @@ const KitCard = {
       setTimeout(() => { location.href = "detail.html?id=" + kit.id; }, 300);
     });
     card.addEventListener("keydown", (e) => {
+      // 只处理「焦点就在卡片本身」的回车：焦点在收藏按钮上按回车时，
+      // 事件会冒泡到这里，若不挡住，按回车会既收藏又跳详情页
+      if (e.target !== card) return;
       if (e.key === "Enter") card.click();
     });
 
