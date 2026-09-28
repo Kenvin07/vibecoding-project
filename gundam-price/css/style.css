@@ -304,6 +304,84 @@ th {
 .sk-bar   { width: 100%; height: 8px; margin-top: 14px; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
+/* ---------- Day 12：首页筛选栏（关键词 + 平台 + 清空） ---------- */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;       /* 窄屏自动换行，不撑破容器（Skill C3） */
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+.filter-field { display: flex; flex-direction: column; }
+.filter-field-grow { flex: 1 1 220px; }
+.filter-field label {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}
+.filter-field input,
+.filter-field select {
+  font-size: 15px;
+  font-family: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+}
+.filter-field input { width: 100%; }
+.filter-field input:hover,
+.filter-field select:hover { border-color: var(--ink-muted); }
+/* Skill B2：键盘焦点必须有可见反馈，不能抹掉 outline */
+.filter-field input:focus-visible,
+.filter-field select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+/* 清空按钮：次要动作，样式比主内容轻一档（Skill C1 层级） */
+.filter-clear {
+  font-size: 14px;
+  font-family: inherit;
+  padding: 8px 16px;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+.filter-clear:hover { background: var(--accent-bg); border-color: var(--accent); }
+.filter-clear:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* 结果计数条：轻量提示，不抢卡片风头（Skill C1） */
+.filter-count {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 12px;
+  min-height: 20px;   /* 占位固定高度，有/无文案时列表不跳动 */
+}
+
+/* 筛选后列表轻微淡入：提示「列表变了」（Skill E2：动效服务于语义） */
+.list-fade { animation: list-fade .2s ease; }
+@keyframes list-fade { from { opacity: .45; } to { opacity: 1; } }
+
+/* Skill E4：尊重系统「减少动态效果」偏好，关掉位移/淡入类动画 */
+@media (prefers-reduced-motion: reduce) {
+  .card, .card:hover, .card.flipping,
+  .fav-btn, .fav-toast, .filter-clear, .list-fade {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 /* ---------- 页脚：数据来源与免责说明 ---------- */
 footer {
   max-width: 880px;
@@ -439,4 +517,10 @@ footer {
   footer { padding: 0 16px 24px; }
   table { font-size: 13px; }
   th, td { padding: 8px 4px; }
+  /* Day 12：窄屏下筛选栏改为竖排，关键词占满整行（Skill C4 手机端不错乱） */
+  .filter-bar { padding: 12px; gap: 10px; }
+  .filter-field-grow { flex: 1 1 100%; }
+  .filter-field input, .filter-field select { width: 100%; }
+  .filter-field:not(.filter-field-grow) { flex: 1 1 140px; }
+  .filter-clear { flex: 1 1 100%; }
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>高达行情</title>
-  <link rel="stylesheet" href="css/style.css?v=20260927">
+  <link rel="stylesheet" href="css/style.css?v=20260928">
 </head>
 <body>
   <header>
@@ -13,6 +13,25 @@
   </header>
 
   <main>
+    <!-- Day 12：筛选栏（关键词 + 平台）。默认无条件 = 显示完整列表 -->
+    <section class="filter-bar" aria-label="筛选机体">
+      <div class="filter-field filter-field-grow">
+        <label for="filter-keyword">关键词</label>
+        <input type="search" id="filter-keyword" placeholder="输入机体名或系列，如 自由 / MGEX" autocomplete="off">
+      </div>
+      <div class="filter-field">
+        <label for="filter-platform">平台</label>
+        <select id="filter-platform">
+          <option value="">全部平台</option>
+          <option value="pdd">拼多多</option>
+          <option value="taobao">淘宝</option>
+          <option value="xianyu">闲鱼</option>
+        </select>
+      </div>
+      <button type="button" id="filter-clear" class="filter-clear">清空</button>
+    </section>
+    <div class="filter-count" id="filter-count" role="status"></div>
+
     <!-- 四种状态由 js/main.js 切换：加载中（骨架屏）/ 成功卡片 / 空 / 错误 -->
     <div id="kit-list"></div>
   </main>
@@ -22,9 +41,10 @@
     「五算」＝日本官方建议零售价 × 汇率（圈内经验值约等于官方价的 0.05），是常用的行情标尺，对冷门限定款不适用。
   </footer>
 
-  <!-- 收藏模块先引，卡片组件再引（点按钮时要用到 Favorite）；最后才是首页逻辑 -->
+  <!-- 收藏模块先引，卡片组件再引（点按钮时要用到 Favorite）；筛选模块引用组件再引；最后才是首页逻辑 -->
   <script src="js/favorite.js?v=20260927b"></script>
   <script src="js/components/kit-card.js?v=20260927b"></script>
-  <script src="js/main.js?v=20260926"></script>
+  <script src="js/filter.js?v=20260928"></script>
+  <script src="js/main.js?v=20260928"></script>
 </body>
 </html>

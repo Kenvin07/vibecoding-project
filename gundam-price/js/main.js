@@ -49,8 +49,22 @@ async function render() {
       renderEmpty(listEl); // ③ 空
       return;
     }
-    // ② 成功：交给组件渲染卡片列表（Day 10 起卡片底部为价格对比条）
-    KitCard.renderList(listEl, data.kits, { rate: data.meta.exchangeRate });
+    // ② 成功：Day 12 起先交给筛选模块（它内部会调组件渲染卡片）；
+    //    Filter.init 里会立刻 apply 一次，此时没有任何筛选条件 = 完整列表。
+    Filter.init({
+      data: data,
+      listEl: listEl,
+      countEl: document.getElementById("filter-count")
+    });
+
+    // Day 12：清空按钮 —— 一键把关键词和平台都复位，恢复完整列表
+    const clearBtn = document.getElementById("filter-clear");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        Filter.clear();
+        document.getElementById("filter-keyword").focus(); // 清空后把光标送回输入框，方便接着搜
+      });
+    }
   } catch (err) {
     updatedEl.textContent = "";
     renderError(listEl); // ④ 错误
