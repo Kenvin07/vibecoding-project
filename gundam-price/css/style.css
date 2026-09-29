@@ -42,6 +42,37 @@ header .updated {
   color: var(--brand-ink);
 }
 
+/* ---------- Day 13：全站导航标签（三个页面统一，可访问） ---------- */
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 6px;
+}
+.site-nav a {
+  color: var(--brand-ink);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 3px 14px;
+  border-radius: 999px;
+  transition: background .15s ease;
+}
+.site-nav a:hover { background: rgba(255, 255, 255, .14); color: #fff; }
+/* 当前页：白底黑字，与其它项一眼区分；读屏器靠 aria-current 识别 */
+.site-nav a[aria-current="page"] {
+  background: #fff;
+  color: var(--brand);
+  font-weight: bold;
+}
+/* Skill B2：键盘焦点必须有可见反馈 */
+.site-nav a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-nav a { transition: none; }
+}
+
 /* ---------- 主体容器 ---------- */
 main {
   max-width: 880px;

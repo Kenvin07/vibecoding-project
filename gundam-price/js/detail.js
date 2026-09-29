@@ -76,10 +76,50 @@ function renderTrendChart(kit, base) {
   });
 }
 
+// ---------- 详情页四种状态（Day 13 补齐） ----------
+
+// ① 加载中：本地 fetch 通常很快，但慢网 / 服务器没开时会停在这里
+function renderDetailLoading(box) {
+  box.innerHTML =
+    '<div class="state-box">' +
+      '<div class="state-emoji">⏳</div>' +
+      '<div class="state-title">正在加载机体详情…</div>' +
+      '<div class="state-desc">正在读取本地数据文件，请稍等。</div>' +
+    '</div>';
+}
+
+// ④ 错误：读不到数据 / JSON 坏了（与首页同一套状态盒样式）
+function renderDetailError(box) {
+  box.innerHTML =
+    '<div class="state-box state-error">' +
+      '<div class="state-title">数据加载失败，请刷新重试</div>' +
+      '<div class="state-desc">若你刚手动改过 data.json，请检查是否多逗号或漏引号；也要确认本地服务器还开着。</div>' +
+    '</div>';
+}
+
+// ③ 空：地址栏的 id 找不到对应机体（id 写错或数据里没有）
+function renderDetailNotFound(box) {
+  box.innerHTML =
+    '<div class="state-box">' +
+      '<div class="state-emoji">🔍</div>' +
+      '<div class="state-title">没有找到这台机体</div>' +
+      '<div class="state-desc">请从首页列表点进来，或检查地址栏的 id 是否拼写正确。</div>' +
+    '</div>';
+}
+
 async function render() {
   const box = document.getElementById("detail");
   const updatedEl = document.getElementById("updated-at");
   const id = getKitId();
+
+  // Day 13：状态预览开关 —— 地址栏加 ?state=loading / error / notfound 直接进入对应状态（截图自检用）
+  const preview = new URLSearchParams(location.search).get("state");
+  if (preview === "loading")  { renderDetailLoading(box); return; }
+  if (preview === "error")    { renderDetailError(box); return; }
+  if (preview === "notfound") { renderDetailNotFound(box); return; }
+
+  // ① 先进加载中状态
+  renderDetailLoading(box);
 
   let data;
   try {
@@ -87,7 +127,7 @@ async function render() {
     if (!res.ok) throw new Error("HTTP " + res.status);
     data = await res.json();
   } catch (err) {
-    box.innerHTML = '<div class="error">数据加载失败，请刷新重试。</div>';
+    renderDetailError(box);
     console.error(err);
     return;
   }
@@ -97,7 +137,7 @@ async function render() {
   // 找不到对应机体（id 写错或不存在）→ 明确提示
   const kit = data.kits.find(k => k.id === id);
   if (!kit) {
-    box.innerHTML = '<div class="error">没有找到这台机体，请从首页列表点进来。</div>';
+    renderDetailNotFound(box);
     return;
   }
 

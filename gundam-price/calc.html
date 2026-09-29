@@ -4,11 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>五算计算器 ｜ 高达行情</title>
-  <link rel="stylesheet" href="css/style.css?v=20260925">
+  <link rel="stylesheet" href="css/style.css?v=20260929">
 </head>
 <body>
   <header>
     <h1>五算计算器</h1>
+    <!-- Day 13：全站导航标签（余力加练）。aria-current 标出当前页 -->
+    <nav class="site-nav" aria-label="页面导航">
+      <a href="index.html">行情列表</a>
+      <a href="calc.html" aria-current="page">五算计算器</a>
+    </nav>
     <div class="updated">填官方日元价，立刻算出合理行情区间；填一个现价，判断贵不贵</div>
   </header>
 
@@ -51,7 +56,7 @@
   </footer>
 
   <!-- 复用卡片组件里的五算算法与档位判断（与详情页同一套口径） -->
-  <script src="js/components/kit-card.js?v=20260925"></script>
-  <script src="js/calc.js?v=20260925"></script>
+  <script src="js/components/kit-card.js?v=20260929"></script>
+  <script src="js/calc.js?v=20260929"></script>
 </body>
 </html>

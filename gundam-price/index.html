@@ -4,11 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>高达行情</title>
-  <link rel="stylesheet" href="css/style.css?v=20260928">
+  <link rel="stylesheet" href="css/style.css?v=20260929">
 </head>
 <body>
   <header>
     <h1>高达行情</h1>
+    <!-- Day 13：全站导航标签（余力加练）。aria-current 标出当前页，读屏器与视觉都能区分 -->
+    <nav class="site-nav" aria-label="页面导航">
+      <a href="index.html" aria-current="page">行情列表</a>
+      <a href="calc.html">五算计算器</a>
+    </nav>
     <div class="updated" id="updated-at">数据加载中…</div>
   </header>
 
@@ -42,9 +47,9 @@
   </footer>
 
   <!-- 收藏模块先引，卡片组件再引（点按钮时要用到 Favorite）；筛选模块引用组件再引；最后才是首页逻辑 -->
-  <script src="js/favorite.js?v=20260927b"></script>
-  <script src="js/components/kit-card.js?v=20260927b"></script>
-  <script src="js/filter.js?v=20260928"></script>
-  <script src="js/main.js?v=20260928"></script>
+  <script src="js/favorite.js?v=20260929"></script>
+  <script src="js/components/kit-card.js?v=20260929"></script>
+  <script src="js/filter.js?v=20260929"></script>
+  <script src="js/main.js?v=20260929"></script>
 </body>
 </html>

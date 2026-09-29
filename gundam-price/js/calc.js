@@ -13,12 +13,24 @@ const els = {
 let rate = null;
 
 async function init() {
+  // ① 加载中：先在下拉框里放一行提示，数据到了再替换成真实选项
+  els.kitSelect.innerHTML = '<option value="">正在读取收录机体…</option>';
+
   try {
     const res = await fetch("data/data.json");
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     rate = data.meta.exchangeRate;
 
+    // ③ 空：数据文件读到了，但一台机体都没收录 → 提示可直接手动填官方价，功能不受影响
+    if (!Array.isArray(data.kits) || data.kits.length === 0) {
+      els.kitSelect.innerHTML =
+        '<option value="">本期还没有收录机体，可直接手动填官方价</option>';
+      return;
+    }
+
+    // ② 成功：填入收录机体（默认第一项仍是「自定义 / 手动填」）
+    els.kitSelect.innerHTML = '<option value="">— 自定义 / 手动填官方价 —</option>';
     for (const kit of data.kits) {
       const opt = document.createElement("option");
       opt.value = kit.officialPriceJPY;
@@ -26,7 +38,13 @@ async function init() {
       els.kitSelect.appendChild(opt);
     }
   } catch (err) {
-    els.result.innerHTML = '<span class="error">数据加载失败，请刷新重试。</span>';
+    // ④ 错误：读不到数据 / JSON 坏了 → 下拉框与结果区都给出明确反馈
+    els.kitSelect.innerHTML = '<option value="">数据加载失败，请刷新重试</option>';
+    els.result.innerHTML =
+      '<div class="state-box state-error">' +
+        '<div class="state-title">数据加载失败，请刷新重试</div>' +
+        '<div class="state-desc">机体下拉框不可用，但你可以直接手动填官方日元价，计算功能不受影响。</div>' +
+      '</div>';
     console.error(err);
   }
 }

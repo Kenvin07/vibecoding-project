@@ -41,6 +41,14 @@ async function render() {
   const updatedEl = document.getElementById("updated-at");
   const listEl = document.getElementById("kit-list");
 
+  // Day 13：状态预览开关 —— 地址栏加 ?state=loading / empty / error 直接进入对应状态。
+  // 用途：本地 fetch 太快，「加载中」一闪而过拍不到截图；也是四态的肉眼自检入口。
+  // 只画状态、不真正读数据，截完图把参数删掉就恢复正常。
+  const preview = new URLSearchParams(location.search).get("state");
+  if (preview === "loading") { renderLoading(listEl); return; }
+  if (preview === "empty")   { updatedEl.textContent = ""; renderEmpty(listEl); return; }
+  if (preview === "error")   { updatedEl.textContent = ""; renderError(listEl); return; }
+
   renderLoading(listEl); // ① 先进加载中状态
   try {
     const data = await loadData();
