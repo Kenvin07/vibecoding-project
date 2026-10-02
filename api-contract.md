@@ -386,7 +386,11 @@
 3. **前端与 API 是否同源** —— 决定要不要开跨域、怎么开。
 4. ~~**数据迁移**~~ —— ✅ **Day 16 已办**：`data.json` 的 3 台机体 + 12 条渠道价已由 `seed.sql` 导入 `kits` / `kit_prices`，select 验证通过（各 5 行 / 12 行）。
 5. **图片存哪** —— 现在图片在静态托管；接入对象存储后是否迁移。
-6. **⚠️ PRD 收录台数与库里不一致** —— `PRD.md` 写"本期收录 3 台"，库里已是 **5 台**（Day 16 为满足"每张核心表 ≥5 行"补了 2 台官方价真实的机型）。**待同步 `PRD.md`**，否则 Day 17 接上接口后首页会多出 2 张卡片。
+6. ~~**PRD 收录台数与库里不一致**~~ —— ✅ **Day 16 已同步**：`PRD.md` 已按 5 台改写
+   （第 1 行新增修订说明；3.1 收录范围换成 5 台表格并写明"为什么从 3 台变成 5 台"；4.1 首页 5 张卡片；
+   5 数据方案；6 验收标准第 2 条；7 版本规划）。
+   **剩余遗留**：① `data.json` 仍只有 3 台（今天不改前端）——Day 17 前端切到接口后自然对齐；
+   ② `TECH_DESIGN.md` 第 63 行写着"本期固定 3 台"，待同步。
 7. **2 台新机体的渠道报价** —— `mg-sazabi-verka` / `mg-nu-verka` 目前没有任何渠道价，详情页会显示"暂无报价"。何时补录由 Master 定（补录后 `kit_prices` 行数会超过 12）。
 
 ---
@@ -396,4 +400,4 @@
 | 日期 | 变更 | 产出 |
 |---|---|---|
 | 2026-10-02 | 首次登记；`GET /api/health` 已上线并验证 | Day 15 |
-| 2026-10-02 | 第 2 节落地为真实表：`kits` / `kit_prices` 按 `gundam-price/db/schema.sql` 建成，`seed.sql` 灌入 5 台机体 + 12 条渠道价（两脚本均可重复执行，已 select 验证）。补记外键 `kit_prices."kitId" → kits.id`（`ON DELETE CASCADE`）、联合唯一约束 `kit_prices_unique_channel`、`platform`/`marketType` 的枚举 `CHECK`；类型列换成实际建表类型；2.3 / 2.4 标记未建；第 6 节新增「PRD 台数待同步」「2 台新机无报价」两项待办 | Day 16 |
+| 2026-10-02 | 第 2 节落地为真实表：`kits` / `kit_prices` 按 `gundam-price/db/schema.sql` 建成，`seed.sql` 灌入 5 台机体 + 12 条渠道价（两脚本均可重复执行，已 select 验证）。补记外键 `kit_prices."kitId" → kits.id`（`ON DELETE CASCADE`）、联合唯一约束 `kit_prices_unique_channel`、`platform`/`marketType` 的枚举 `CHECK`；类型列换成实际建表类型；2.3 / 2.4 标记未建；第 6 节新增「PRD 台数待同步」「2 台新机无报价」两项待办；同日已同步 `PRD.md` 收录台数 3 → 5（第 6 节待定项 6 关闭） | Day 16 |
