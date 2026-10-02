@@ -1,9 +1,10 @@
 # api-contract.md ｜「高达行情」接口契约
 
-> **Day 15 产出 · 2026-10-02（第 3 周）**
+> **Day 15 产出 · 2026-10-02（第 3 周）｜Day 16 更新：表结构已落地**
 >
-> ⚠️ **本文件是第 3 周建表、写接口的唯一依据。今天只登记（占位），不实现任何业务逻辑。**
-> 实现从 Day 16 开始，按本文件逐条落地，接口写完前不改这里的约定；要改先改文档。
+> ⚠️ **本文件是第 3 周建表、写接口的唯一依据。**
+> Day 16 已按第 2 节建好 `kits` / `kit_prices` 两张表（脚本见 `gundam-price/db/`），
+> 但**尚未实现任何接口**——接口从 Day 17 开始逐条落地，写完前不改这里的约定；要改先改文档。
 >
 > 依据：`TECH_DESIGN.md` 第 5 节（数据对象及字段）+ 现有 `data/data.json`（字段一一对应）
 > 环境：腾讯云 CloudBase · 环境 ID `gundam-market-d7gnjqg3h1f2f156f`（上海 · PostgreSQL）
@@ -35,7 +36,7 @@
 | 时间戳 | ISO 8601（如 `2026-10-02T16:30:00+08:00`） |
 | 金额 | 人民币元，整数 `number`；日元也是整数 |
 | 缺值 | 暂无报价用 `null`，**不用 `0`**（`0` 是「免费」，语义不同） |
-| 分页 | 本期数据量极小（3 台机体），暂不分页；列表接口预留 `limit`/`offset` 参数 |
+| 分页 | 本期数据量极小（5 台机体），暂不分页；列表接口预留 `limit`/`offset` 参数 |
 
 ### 状态码表
 
@@ -51,46 +52,64 @@
 
 ---
 
-## 2. 数据表登记（Day 16 建表依据）
+## 2. 数据表登记（Day 16 已建表 ✅）
 
 > 由现有 `data.json` 结构平移而来。**字段名不变**（TECH_DESIGN 第 11 节的承诺：字段即未来的表结构）。
+>
+> **Day 16 更新（2026-10-02）**：2.1 / 2.2 已按 `gundam-price/db/schema.sql` 落地为真实表，
+> 数据由 `gundam-price/db/seed.sql` 灌入（两脚本均可重复执行）。
+> 下表「类型」列已换成**数据库里的真实类型**，与 `data.json` 的 `number`/`string` 只是表示法不同，
+> **JSON 输出格式不变**，第 4 节的响应示例照旧有效。
+> 2.3 `favorites` / 2.4 `app_meta` **今天没建**，按需再补（不影响 Day 17 的读接口）。
+> ⚠️ 列名在库里保持小驼峰，写 SQL 时需加双引号（如 `"officialPriceJPY"`、`"kitId"`）。
 
-### 2.1 `kits` 机体表
+### 2.1 `kits` 机体表 ✅ 已建
 
-| 列 | 类型 | 必填 | 说明 |
+| 列 | 类型（实际建表） | 必填 | 说明 |
 |---|---|---|---|
-| `id` | string (PK) | 是 | 英文小写标识，如 `mg-freedom-2`，详情页 URL 参数用它 |
-| `name` | string | 是 | 机体名，如 `MG 自由 2.0` |
-| `series` | string | 是 | 系列：`MG` / `MGEX` |
-| `image` | string | 否 | 图片文件名（存对象存储），缺省时前端用文字占位 |
-| `imagePos` | string | 否 | 图片裁剪位置，如 `center 30%` |
-| `officialPriceJPY` | number | 是 | 日本官方建议零售价（日元） |
-| `salesVolume` | number | 否 | 销量参考值（卡片展示用） |
-| `createdAt` | timestamp | 是 | 录入时间 |
-| `updatedAt` | timestamp | 是 | 最后修改时间 |
+| `id` | `text` **PK** | 是 | 英文小写标识，如 `mg-freedom-2`，详情页 URL 参数用它。**不用自增数字**：前后端共用同一把钥匙，省一层换算 |
+| `name` | `text` | 是 | 机体名，如 `MG 自由 2.0` |
+| `series` | `text` | 是 | 系列：`MG` / `MGEX`。**故意不加枚举限制**——以后收 RG / PG 不用改表结构 |
+| `image` | `text` | 否 | 图片文件名（存对象存储），缺省时前端用文字占位 |
+| `imagePos` | `text` | 否 | 图片裁剪位置，如 `center 30%` |
+| `officialPriceJPY` | `integer` | 是 | 日本官方建议零售价（日元）。日元是整数 → 用整数类型；`CHECK >= 0` 挡负数 |
+| `salesVolume` | `integer` | 否 | 销量参考值（卡片展示用）。**可空且不设默认 0**：空 = 没统计过，0 = 真的卖 0 台 |
+| `createdAt` | `timestamptz` | 是 | 录入时间，`DEFAULT now()`。带时区，对应第 1 节 `2026-10-02T16:30:00+08:00` 的写法 |
+| `updatedAt` | `timestamptz` | 是 | 最后修改时间，`DEFAULT now()` |
 
-### 2.2 `kit_prices` 渠道价格记录表 ★ 核心记录表
+> **Day 16 实际入库 5 行**：原 3 台（自由 2.0 / 强袭自由 / 独角兽）+ 新增 2 台
+> （`mg-sazabi-verka` 沙扎比 Ver.Ka 9,000 円、`mg-nu-verka` ν高达 Ver.Ka 7,000 円，官方价均为真实公开数据）。
+> 新增 2 台**暂无渠道报价**，`image` / `salesVolume` 存 `null`（没数据就留空，不编）。
+
+### 2.2 `kit_prices` 渠道价格记录表 ★ 核心记录表 ✅ 已建
 
 > **每「录入一次某渠道某行/水货的价格」= 这里新增一行**。
 > 详情页的「近 30 天每日最低价走势」不再单独建表：由本表按 `updatedDate` 分组取 `MIN(price)` 算出。少一张表，少一处同步。
 
-| 列 | 类型 | 必填 | 说明 |
+| 列 | 类型（实际建表） | 必填 | 说明 |
 |---|---|---|---|
-| `id` | string (PK) | 是 | 记录 id |
-| `kitId` | string (FK → kits.id) | 是 | 属于哪台机体 |
-| `platform` | string | 是 | 枚举：`pdd` / `taobao` / `xianyu` |
-| `marketType` | string | 是 | 枚举：`行货` / `水货`（分行展示，不混算） |
-| `price` | number / null | 是 | 现价（人民币元）；暂无报价存 `null` |
-| `updatedDate` | date | 是 | 该条价格的录入日期 |
-| `url` | string | 否 | 「去购买」跳转链接，空串 = 暂无链接 |
-| `createdAt` | timestamp | 是 | 入库时间 |
+| `id` | `text` **PK** | 是 | 记录 id，如 `pr_0001`。不设自动生成：Day 17 新增接口由后端生成 |
+| `kitId` | `text` **FK → `kits.id`** | 是 | ★关联字段。`ON DELETE CASCADE`（删机体时连带删它的价格，不留孤儿数据） |
+| `platform` | `text` | 是 | 枚举（`CHECK` 约束）：`pdd` / `taobao` / `xianyu`。加京东需 `ALTER TABLE` |
+| `marketType` | `text` | 是 | 枚举（`CHECK` 约束）：`行货` / `水货`（分行展示，不混算） |
+| `price` | `integer` | **否** | 现价（人民币元）；**暂无报价存 `null` 且无默认值**（`0` 是「免费」，语义不同）；`CHECK >= 0` 只挡负数 |
+| `updatedDate` | `date` | 是 | 该条价格的录入日期。用 date 而非文字——走势图靠它按天分组 |
+| `url` | `text` | 是 | 「去购买」跳转链接，`DEFAULT ''`（空串 = 暂无链接） |
+| `createdAt` | `timestamptz` | 是 | 入库时间，`DEFAULT now()` |
 
-**唯一约束建议**：`(kitId, platform, marketType, updatedDate)` 唯一 → 同一天同一渠道同类型只留一条，防重复录入。
+**唯一约束（已落地）**：约束名 `kit_prices_unique_channel`，`(kitId, platform, marketType, updatedDate)` 唯一
+→ 同一天同一渠道同类型只留一条，防重复录入。
 
-### 2.3 `favorites` 收藏表
+> 附带两个好处：① 契约 4.5 的 `409 DUPLICATE_RECORD` 由数据库直接拦住，接口层不用自己判断；
+> ② 该约束自动建的索引最左列就是 `kitId`，正好给"查某台机的所有价格"加速，无需再单独建索引。
+>
+> **Day 16 实际入库 12 行**（原 3 台 × 每台 4 条，与 `data.json` 逐条一致，日期统一 `2026-09-22`）。新增的 2 台暂无记录。
+
+### 2.3 `favorites` 收藏表 ⬜ 未建（本周按需补）
 
 > 现在收藏存在浏览器 `localStorage`（`favorite.js`）。接后端后跨设备保留。
-> 本期无登录 → 用**匿名设备号 `deviceId`** 当"用户身份"（Day 16 拍板：是否换登录）。
+> 本期无登录 → 用**匿名设备号 `deviceId`** 当"用户身份"（身份方案见第 6 节待定项 2）。
+> **Day 16 未建此表**：接口 8/9/10 还没排上，等真要用时再建。
 
 | 列 | 类型 | 必填 | 说明 |
 |---|---|---|---|
@@ -101,7 +120,7 @@
 
 **唯一约束建议**：`(deviceId, kitId)` 唯一 → 同一设备不会重复收藏同一台。
 
-### 2.4 `app_meta` 全局设置表（小表，一行）
+### 2.4 `app_meta` 全局设置表（小表，一行）⬜ 未建（Day 17 读接口要用时再建）
 
 | 列 | 类型 | 说明 |
 |---|---|---|
@@ -360,13 +379,15 @@
 
 ---
 
-## 6. 待定项（Day 16 拍板，今天不决定）
+## 6. 待定项（滚动更新）
 
 1. **写接口谁能调** —— 管理后台？固定密钥？还是先只留只读接口？
 2. **收藏的身份** —— 继续用匿名 `deviceId`，还是上微信/手机号登录？
 3. **前端与 API 是否同源** —— 决定要不要开跨域、怎么开。
-4. **数据迁移** —— 现有 `data.json` 里的 3 台机体 + 12 条渠道价，一次性导入 `kits` / `kit_prices`。
+4. ~~**数据迁移**~~ —— ✅ **Day 16 已办**：`data.json` 的 3 台机体 + 12 条渠道价已由 `seed.sql` 导入 `kits` / `kit_prices`，select 验证通过（各 5 行 / 12 行）。
 5. **图片存哪** —— 现在图片在静态托管；接入对象存储后是否迁移。
+6. **⚠️ PRD 收录台数与库里不一致** —— `PRD.md` 写"本期收录 3 台"，库里已是 **5 台**（Day 16 为满足"每张核心表 ≥5 行"补了 2 台官方价真实的机型）。**待同步 `PRD.md`**，否则 Day 17 接上接口后首页会多出 2 张卡片。
+7. **2 台新机体的渠道报价** —— `mg-sazabi-verka` / `mg-nu-verka` 目前没有任何渠道价，详情页会显示"暂无报价"。何时补录由 Master 定（补录后 `kit_prices` 行数会超过 12）。
 
 ---
 
@@ -375,3 +396,4 @@
 | 日期 | 变更 | 产出 |
 |---|---|---|
 | 2026-10-02 | 首次登记；`GET /api/health` 已上线并验证 | Day 15 |
+| 2026-10-02 | 第 2 节落地为真实表：`kits` / `kit_prices` 按 `gundam-price/db/schema.sql` 建成，`seed.sql` 灌入 5 台机体 + 12 条渠道价（两脚本均可重复执行，已 select 验证）。补记外键 `kit_prices."kitId" → kits.id`（`ON DELETE CASCADE`）、联合唯一约束 `kit_prices_unique_channel`、`platform`/`marketType` 的枚举 `CHECK`；类型列换成实际建表类型；2.3 / 2.4 标记未建；第 6 节新增「PRD 台数待同步」「2 台新机无报价」两项待办 | Day 16 |
