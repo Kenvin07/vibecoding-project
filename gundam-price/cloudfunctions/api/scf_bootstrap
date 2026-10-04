@@ -1,0 +1,29 @@
+#!/bin/sh
+# scf_bootstrap ｜ 云函数的「点火开关」
+# ---------------------------------------------------------------------------
+# HTTP 云函数不会自己知道该跑哪个文件，它认的是代码包根目录下这个固定名字的
+# 启动脚本（没有扩展名，就叫他 scf_bootstrap）。平台拉起函数时执行它，
+# 我们的 node 进程起来并监听 9000 端口，函数才算「活着」。
+#
+# 【为什么写成一串 if 去找 node】
+# 不同运行时的 node 路径不一样（Node 18 是 /var/lang/node18/bin/node，
+# Node 20 是 /var/lang/node20/bin/node…），不在 PATH 里直接敲 node 可能报
+# command not found。这里按「先精准、后兜底」的顺序找一个能用的，谁都行，
+# 换个运行时就跑不起来的问题就没了。
+#
+# 【注意】本文件必须用 LF 换行（不能是 Windows 的 CRLF），否则 Linux 侧会报
+#        /bin/sh^M: bad interpreter。上传前也确认它有可执行权限。
+# ---------------------------------------------------------------------------
+
+if [ -x /var/lang/node20/bin/node ]; then
+  exec /var/lang/node20/bin/node index.js
+elif [ -x /var/lang/node18/bin/node ]; then
+  exec /var/lang/node18/bin/node index.js
+elif [ -x /var/lang/node16/bin/node ]; then
+  exec /var/lang/node16/bin/node index.js
+elif command -v node >/dev/null 2>&1; then
+  exec node index.js
+else
+  echo "[scf_bootstrap] 找不到 node，请检查运行时版本" 1>&2
+  exit 1
+fi

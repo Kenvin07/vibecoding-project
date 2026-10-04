@@ -3,3 +3,6 @@
 
 # 依赖包目录（Day 7 装依赖后会自动生成，也自动忽略）
 node_modules/
+
+# 云函数部署包（本地打包产物，不进仓库）
+gundam-price/cloudfunctions/*.zip
