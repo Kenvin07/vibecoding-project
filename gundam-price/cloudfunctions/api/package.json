@@ -1,7 +1,7 @@
 {
   "name": "api",
   "version": "1.0.0",
-  "description": "Day 17 读接口云函数：GET /api/kits、GET /api/prices（走 CloudBase 数据网关，无需第三方依赖）",
+  "description": "Day 17 读接口 + Day 18 写接口云函数：GET /api/kits、GET /api/prices、POST /api/prices（走 CloudBase 数据网关，无需第三方依赖）",
   "main": "index.js",
   "dependencies": {}
 }
