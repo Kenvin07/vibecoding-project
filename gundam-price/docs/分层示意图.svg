@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 900" width="1120" height="900">
+  <defs>
+    <marker id="arrowDown" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowUp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="900" fill="#f6f7fb"/>
+
+  <g font-family="'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif">
+    <!-- 标题 -->
+    <text x="48" y="56" font-size="26" font-weight="700" fill="#0f172a">高达行情 · 后端分层架构</text>
+    <text x="48" y="84" font-size="14" fill="#64748b">Day 19 重构：把「查数据库」从接口文件里搬到独立的一层 ｜ 接口路径与字段名一个未动，行为零变化</text>
+    <text x="1072" y="56" font-size="13" fill="#94a3b8" text-anchor="end">cloudfunctions/api/</text>
+    <line x1="48" y1="102" x2="1072" y2="102" stroke="#e2e8f0" stroke-width="1"/>
+
+    <!-- 请求 / 响应 流向 -->
+    <line x1="72" y1="140" x2="72" y2="772" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowDown)"/>
+    <line x1="112" y1="772" x2="112" y2="140" stroke="#94a3b8" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrowUp)"/>
+    <text x="52" y="300" font-size="15" fill="#2563eb" transform="rotate(90 52 300)">请求</text>
+    <text x="92" y="330" font-size="15" fill="#94a3b8" transform="rotate(90 92 330)">响应</text>
+
+    <!-- ===== ① 接入层 ===== -->
+    <rect x="170" y="130" width="730" height="118" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <rect x="184" y="146" width="6" height="86" rx="3" fill="#2563eb"/>
+    <text x="206" y="168" font-size="19" font-weight="700" fill="#0f172a">① 接入层 · index.js</text>
+    <rect x="782" y="148" width="96" height="26" rx="13" fill="#eff6ff" stroke="#bfdbfe"/>
+    <text x="830" y="166" font-size="13" fill="#2563eb" text-anchor="middle">134 行</text>
+    <text x="206" y="198" font-size="13" fill="#475569">起服务 · 认路由 · 套统一响应外壳 · 错误兜底</text>
+    <text x="206" y="224" font-size="13" fill="#475569">只做「接请求 → 调函数 → 返响应」；文件里搜不到网址、表名、API Key</text>
+
+    <!-- ===== ② 业务层 ===== -->
+    <rect x="170" y="278" width="730" height="130" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <rect x="184" y="294" width="6" height="98" rx="3" fill="#7c3aed"/>
+    <text x="206" y="316" font-size="19" font-weight="700" fill="#0f172a">② 业务层 · services/</text>
+    <rect x="782" y="296" width="96" height="26" rx="13" fill="#f5f3ff" stroke="#ddd6fe"/>
+    <text x="830" y="314" font-size="13" fill="#7c3aed" text-anchor="middle">364 行</text>
+    <text x="206" y="348" font-size="13" fill="#475569">kitsService.js（109 行）— 校验 series/limit、按 kitId 分组、筛选排序、算 minPrice</text>
+    <text x="206" y="376" font-size="13" fill="#475569">pricesService.js（255 行）— 校验参数与请求体、查重、生成 pr_xxxx 编号、组装入库行</text>
+
+    <!-- ===== ③ 数据访问层（今天的主角） ===== -->
+    <rect x="170" y="438" width="730" height="118" rx="12" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+    <rect x="184" y="454" width="6" height="86" rx="3" fill="#ea580c"/>
+    <text x="206" y="476" font-size="19" font-weight="700" fill="#9a3412">③ 数据访问层 · repositories/</text>
+    <text x="490" y="476" font-size="13" fill="#ea580c">← 今天从接口文件里拆出来的</text>
+    <rect x="782" y="456" width="96" height="26" rx="13" fill="#ffedd5" stroke="#fdba74"/>
+    <text x="830" y="474" font-size="13" fill="#c2410c" text-anchor="middle">60 行</text>
+    <text x="206" y="506" font-size="13" fill="#7c2d12">kitsRepository.js（30 行）— listKits() ｜ findKitById(id)</text>
+    <text x="206" y="532" font-size="13" fill="#7c2d12">kitPricesRepository.js（30 行）— listPrices() ｜ insertPrice(row)</text>
+
+    <!-- ===== ④ 数据网关 ===== -->
+    <rect x="170" y="586" width="730" height="110" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+    <rect x="184" y="602" width="6" height="78" rx="3" fill="#0891b2"/>
+    <text x="206" y="624" font-size="19" font-weight="700" fill="#0f172a">④ 数据网关 · db/gateway.js</text>
+    <rect x="782" y="604" width="96" height="26" rx="13" fill="#ecfeff" stroke="#a5f3fc"/>
+    <text x="830" y="622" font-size="13" fill="#0891b2" text-anchor="middle">130 行</text>
+    <text x="206" y="654" font-size="13" fill="#475569">get(table) ｜ post(table, row) — 带着 API Key 真发 HTTPS，只认「要哪张表」</text>
+    <text x="206" y="678" font-size="13" fill="#64748b">原 index.js 第 74–175 行的 gwGet / gwPost，原样搬来，逻辑一字未改</text>
+
+    <!-- ===== CloudBase ===== -->
+    <rect x="170" y="726" width="730" height="90" rx="12" fill="#eef2f6" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="206" y="764" font-size="18" font-weight="700" fill="#334155">CloudBase 托管 PostgreSQL</text>
+    <text x="206" y="790" font-size="13" fill="#64748b">kits（5 台机体） ｜  kit_prices（13 条价格记录）</text>
+
+    <!-- ===== 通用层 ===== -->
+    <rect x="920" y="130" width="160" height="566" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="7 5"/>
+    <text x="936" y="160" font-size="15" font-weight="700" fill="#475569">通用层 lib/</text>
+    <line x1="936" y1="172" x2="1064" y2="172" stroke="#e2e8f0" stroke-width="1"/>
+
+    <text x="936" y="198" font-size="12.5" font-weight="700" fill="#334155">constants.js</text>
+    <text x="936" y="216" font-size="11.5" fill="#64748b">汇率 / 枚举 / 上限</text>
+    <text x="936" y="248" font-size="12.5" font-weight="700" fill="#334155">errors.js</text>
+    <text x="936" y="266" font-size="11.5" fill="#64748b">ConfigError · HttpError</text>
+    <text x="936" y="298" font-size="12.5" font-weight="700" fill="#334155">http.js</text>
+    <text x="936" y="316" font-size="11.5" fill="#64748b">send* · readBody</text>
+    <text x="936" y="348" font-size="12.5" font-weight="700" fill="#334155">validators.js</text>
+    <text x="936" y="366" font-size="11.5" fill="#64748b">readInt / readDate</text>
+    <text x="936" y="384" font-size="11.5" fill="#64748b">readEnum / isRealDate</text>
+    <text x="936" y="402" font-size="11.5" fill="#64748b">nextPriceId</text>
+
+    <text x="936" y="660" font-size="11.5" fill="#94a3b8">被 ①②③④ 各层</text>
+    <text x="936" y="678" font-size="11.5" fill="#94a3b8">共同调用</text>
+
+    <!-- 通用层与各层的连接线 -->
+    <line x1="900" y1="189" x2="920" y2="189" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <line x1="900" y1="343" x2="920" y2="343" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <line x1="900" y1="497" x2="920" y2="497" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <line x1="900" y1="641" x2="920" y2="641" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+    <!-- 底部结论 -->
+    <rect x="48" y="836" width="1024" height="52" rx="10" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="72" y="859" font-size="14" fill="#3730a3">重构前：index.js 一个文件 730 行、干 6 件事　→　重构后：134 行、只干 1 件事</text>
+    <text x="72" y="880" font-size="14" fill="#3730a3">验证：本地桩 36 条用例 + 线上 14 条接口，改前改后逐字节相同，无一处行为变化</text>
+  </g>
+</svg>
