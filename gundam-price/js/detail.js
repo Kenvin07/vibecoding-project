@@ -1,6 +1,9 @@
 // detail.js ｜ 详情页逻辑：按 URL 参数 ?id=xxx 找到机体，渲染五算参照、
 // 三渠道 × 行水货价格表和行情档位（捡漏 / 合理 / 溢价）
 // 价格算法与渠道名统一由组件 js/components/kit-card.js 提供（加练项抽出，避免两处各写一遍）
+// Day 20：数据源从本地 data/data.json 换成公网接口（走 js/api.js）。
+//   仍是「取全量再按 id 找」——因为带 id 的接口路径（GET /api/kits/{id}）尚未实现，
+//   这属于 api-contract.md 第 6 节待定项，不是今天的事。
 
 // 从地址栏取 id：detail.html?id=mg-unicorn → "mg-unicorn"
 function getKitId() {
@@ -84,7 +87,7 @@ function renderDetailLoading(box) {
     '<div class="state-box">' +
       '<div class="state-emoji">⏳</div>' +
       '<div class="state-title">正在加载机体详情…</div>' +
-      '<div class="state-desc">正在读取本地数据文件，请稍等。</div>' +
+      '<div class="state-desc">正在向云端接口请求数据，请稍等。</div>' +
     '</div>';
 }
 
@@ -93,7 +96,7 @@ function renderDetailError(box) {
   box.innerHTML =
     '<div class="state-box state-error">' +
       '<div class="state-title">数据加载失败，请刷新重试</div>' +
-      '<div class="state-desc">若你刚手动改过 data.json，请检查是否多逗号或漏引号；也要确认本地服务器还开着。</div>' +
+      '<div class="state-desc">数据来自云端接口：先确认网络正常；若一直失败，多半是接口故障或跨域被拦，按 F12 看控制台的红字。</div>' +
     '</div>';
 }
 
@@ -123,9 +126,7 @@ async function render() {
 
   let data;
   try {
-    const res = await fetch("data/data.json");
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    data = await res.json();
+    data = await API.getKits(); // Day 20：改走公网接口（走 js/api.js）
   } catch (err) {
     renderDetailError(box);
     console.error(err);

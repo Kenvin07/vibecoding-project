@@ -1,6 +1,7 @@
 // calc.js ｜ 五算计算器：官方日元价 → 五算基准 + 三档价格分界；
 // 可选填一个现价，用与详情页同一套算法（KitCard.tierOf）判断捡漏 / 合理 / 溢价。
-// 汇率与收录机体都读 data/data.json，保证全站只有一个数据源。
+// Day 20：汇率与收录机体改从公网接口读（走 js/api.js），全站仍是同一个数据源。
+// 计算逻辑一行没动 —— 只换了「数据从哪来」。
 
 const els = {
   kitSelect: document.getElementById("kit-select"),
@@ -17,12 +18,10 @@ async function init() {
   els.kitSelect.innerHTML = '<option value="">正在读取收录机体…</option>';
 
   try {
-    const res = await fetch("data/data.json");
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json();
+    const data = await API.getKits(); // Day 20：改走公网接口
     rate = data.meta.exchangeRate;
 
-    // ③ 空：数据文件读到了，但一台机体都没收录 → 提示可直接手动填官方价，功能不受影响
+    // ③ 空：接口读到了，但一台机体都没收录 → 提示可直接手动填官方价，功能不受影响
     if (!Array.isArray(data.kits) || data.kits.length === 0) {
       els.kitSelect.innerHTML =
         '<option value="">本期还没有收录机体，可直接手动填官方价</option>';

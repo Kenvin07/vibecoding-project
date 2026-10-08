@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>检查台 ｜ 高达行情</title>
+  <link rel="stylesheet" href="css/style.css?v=20261008">
+</head>
+<body>
+  <header>
+    <h1>检查台</h1>
+    <!-- Day 13：全站导航标签（余力加练）。aria-current 标出当前页 -->
+    <nav class="site-nav" aria-label="页面导航">
+      <a href="index.html">行情列表</a>
+      <a href="calc.html">五算计算器</a>
+      <a href="check.html" aria-current="page">检查台</a>
+    </nav>
+    <!-- Day 20 余力加练：最后更新时间 -->
+    <div class="updated" id="checked-at">正在检查…</div>
+  </header>
+
+  <main>
+    <!-- ① 后端健康状态：不依赖数据库，永远该成功。它红了 = 服务器没起来，别往下看 -->
+    <div class="panel">
+      <h2>① 后端健康状态</h2>
+      <div id="health-box">
+        <div class="status-line"><span class="dot dot-wait"></span><span>正在请求 GET /api/health …</span></div>
+      </div>
+    </div>
+
+    <!-- ② 核心表真实数据：直接来自数据库，页面上看到什么，库里就是什么 -->
+    <div class="panel">
+      <h2>② 核心表真实数据</h2>
+      <div id="data-box">
+        <div class="status-line"><span class="dot dot-wait"></span><span>正在请求 GET /api/kits 与 GET /api/prices …</span></div>
+      </div>
+    </div>
+
+    <!-- ③ 写入测试：本机专用。公网域名下这一段不会显示（密钥不能进前端） -->
+    <div class="panel">
+      <h2>③ 写入测试<span class="tag-local" id="write-scope">仅本机</span></h2>
+      <div id="write-box"></div>
+    </div>
+
+    <p class="check-note">
+      本页只读部分（①②）任何人都能打开；③ 写入测试需要写接口密钥，
+      所以只在 <span class="mono">localhost</span> 下开启 —— 密钥不写进代码、不进 Git。
+    </p>
+  </main>
+
+  <footer>
+    数据来源：拼多多 / 淘宝 / 闲鱼的价格快照，由作者手动录入，每天更新 1 次；价格为录入时的快照，非实时报价，仅供参考，请以下单时平台实际价格为准。<br>
+    本页是三周成果的运维入口：健康状态来自 <span class="mono">GET /api/health</span>，数据来自 <span class="mono">GET /api/kits</span> 与 <span class="mono">GET /api/prices</span>。
+  </footer>
+
+  <!-- Day 20：api.js 必须最先引（它是数据入口，报告页逻辑要用 API） -->
+  <script src="js/api.js?v=20261008"></script>
+  <script src="js/check.js?v=20261008"></script>
+</body>
+</html>

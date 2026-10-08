@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>高达行情 · 机体详情</title>
-  <link rel="stylesheet" href="css/style.css?v=20260929">
+  <link rel="stylesheet" href="css/style.css?v=20261008">
 </head>
 <body>
   <header>
@@ -13,6 +13,7 @@
     <nav class="site-nav" aria-label="页面导航">
       <a href="index.html">行情列表</a>
       <a href="calc.html">五算计算器</a>
+      <a href="check.html">检查台</a>
     </nav>
     <div class="updated" id="updated-at"></div>
   </header>
@@ -29,8 +30,9 @@
   </footer>
 
   <!-- 卡片组件先引，详情页逻辑再引（顺序不能反）；Chart.js 走 CDN，加载失败时 detail.js 有文字兜底 -->
+  <script src="js/api.js?v=20261008"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="js/components/kit-card.js?v=20260929"></script>
-  <script src="js/detail.js?v=20260929"></script>
+  <script src="js/components/kit-card.js?v=20261008"></script>
+  <script src="js/detail.js?v=20261008"></script>
 </body>
 </html>

@@ -537,6 +537,33 @@ footer {
 .fav-toast.ok  { background: #166534; }
 .fav-toast.err { background: #b91c1c; }
 
+/* ---------- Day 20：检查台（check.html） ---------- */
+/* 状态点：绿=通，红=断，灰=正在查 / 本项不适用 */
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; display: inline-block; }
+.dot-ok { background: #16a34a; }
+.dot-bad { background: #dc2626; }
+.dot-wait { background: #9ca3af; }
+.status-line { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+/* 指标卡：一格一个数字，窄屏自动折行 */
+.check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0 4px; }
+.metric { background: var(--bg); border-radius: var(--radius); padding: 10px 12px; }
+.metric-label { font-size: 13px; color: var(--ink-muted); }
+.metric-value { font-size: 18px; font-weight: bold; margin-top: 2px; word-break: break-all; }
+.check-h3 { font-size: 15px; margin: 16px 0 6px; }
+.check-note { font-size: 13px; color: var(--ink-muted); line-height: 1.8; margin: 10px 0 0; }
+.check-hr { border: 0; border-top: 1px solid var(--line); margin: 18px 0 0; }
+.check-check { display: block; font-size: 13px; color: var(--ink-muted); margin: 10px 0; cursor: pointer; }
+.check-check input { margin-right: 6px; }
+.mono { font-family: Consolas, "Courier New", monospace; font-size: 13px; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+.check-btn { font-size: 15px; font-family: inherit; padding: 9px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); cursor: pointer; }
+.check-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.check-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.check-btn.primary:hover:not(:disabled) { background: #1e40af; color: #fff; }
+.check-btn:disabled { opacity: .5; cursor: not-allowed; }
+.tag-local { font-size: 12px; font-weight: normal; color: var(--ink-muted); margin-left: 8px; }
+.write-warn { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: var(--radius); padding: 10px 12px; font-size: 13px; line-height: 1.8; margin: 12px 0; }
+.check-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 16px; }
+
 /* ---------- 手机端适配（窄屏单列） ---------- */
 @media (max-width: 600px) {
   header { padding: 14px 16px; }

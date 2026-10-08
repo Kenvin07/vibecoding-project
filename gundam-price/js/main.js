@@ -1,12 +1,13 @@
-// main.js ｜ 首页逻辑（Day 8 · mock 数据版）
+// main.js ｜ 首页逻辑（Day 8 建立 · Day 20 数据源切到公网接口）
 // 四种页面状态：① 加载中 ② 成功（卡片列表）③ 空 ④ 错误，互斥切换
 // 卡片长什么样、价格怎么算，都交给组件 js/components/kit-card.js（加练项抽出）
 
-// 读取数据文件；HTTP 出错时抛异常，交给调用方进「错误」状态
+// 取数据。Day 20 改动：原来是 fetch("data/data.json") 读本地文件，
+// 现在交给 js/api.js 去读公网接口（按 api-contract.md 第 5 节的约定）。
+// 接口回的 data 形状（meta + kits）与原来的 data.json 一模一样，
+// 所以这个函数以外的代码一个字都没改 —— 这就是当初把「数据源」和「页面逻辑」分开的好处。
 async function loadData() {
-  const res = await fetch("data/data.json");
-  if (!res.ok) throw new Error("HTTP " + res.status);
-  return await res.json();
+  return await API.getKits();
 }
 
 // ---------- 四种页面状态 ----------
@@ -31,7 +32,7 @@ function renderError(listEl) {
   listEl.innerHTML =
     '<div class="state-box state-error">' +
       '<div class="state-title">数据加载失败，请刷新重试</div>' +
-      '<div class="state-desc">若你刚手动改过 data.json，请检查是否多逗号或漏引号；也要确认本地服务器还开着。</div>' +
+      '<div class="state-desc">数据来自云端接口：先确认网络正常；若一直失败，多半是接口故障或跨域被拦，按 F12 看控制台的红字。</div>' +
     '</div>';
 }
 
