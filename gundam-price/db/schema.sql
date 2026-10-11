@@ -119,3 +119,74 @@ CREATE TABLE IF NOT EXISTS public.kit_prices (
 -- SELECT table_name FROM information_schema.tables
 --  WHERE table_schema = 'public' AND table_name IN ('kits', 'kit_prices')
 --  ORDER BY table_name;
+
+
+-- ============================================================================
+-- 表三：checkins 巡查打卡表
+-- ----------------------------------------------------------------------------
+-- 产出：Day 22（第 4 周）· 板块① 建表
+-- 依据：api-contract.md 第 2.5 节（今日同步登记）—— 表名、列名、类型照契约平移。
+--
+-- 【这张表是干什么的】
+--   记录「今天我巡查过哪台机体的行情」。一行 = 某台机体、某一天的打卡：
+--   是否查了（完成状态）、查到什么（备注）。
+--   它不参与比价计算，只记录「巡查这件事本身做没做」。
+--
+-- 【和 kit_prices 的区别】（别混）
+--   kit_prices  记「渠道报价是多少」，是行情数据本身；
+--   checkins    记「我今天是否去看了」，是行为记录。
+--   两者都挂在 kits 上，但一个记结果、一个记动作。
+--
+-- 【列名为什么带双引号】同前两张表：小驼峰列名（"kitId" / "checkinDate" /
+--   "isDeleted" / "createdAt"）不加引号会被 PostgreSQL 折成小写，之后报
+--   "column does not exist"。全小写的（id / status / note）不用包。
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.checkins (
+  id             text        PRIMARY KEY,
+  "kitId"        text        NOT NULL REFERENCES public.kits(id) ON DELETE CASCADE,
+  "checkinDate"  date        NOT NULL,
+  status         text        NOT NULL CHECK (status IN ('已完成', '未完成')),
+  note           text        NOT NULL DEFAULT '',
+  "isDeleted"    boolean     NOT NULL DEFAULT false,
+  "createdAt"    timestamptz NOT NULL DEFAULT now()
+);
+
+-- 逐列说明：
+--   id            主键。契约示例是 ck_0001。不设自动生成，由后端在新增时生成
+--                 （与 kit_prices 的 pr_0001 同一套做法）。
+--   "kitId"       ★关联字段。外键指向 kits.id，两条作用与 kit_prices 相同：
+--                   ① 不许挂空：插一条不存在的机体 id 会被直接拒绝；
+--                   ② 连带删除（ON DELETE CASCADE）：删机体时它的打卡记录一起删。
+--                 本期不做「不绑机体的打卡」，所以是 NOT NULL。
+--   "checkinDate" 打卡日期。用 date 而不是文字：以后要按天统计「哪些天漏打卡」，
+--                 存文字没法这么查。
+--   status        ★可改字段①「完成状态」。只能是 已完成 / 未完成 两个值之一。
+--                 CHECK 约束挡住打字错误（如「完成」「Done」），脏值根本存不进来。
+--   note          ★可改字段②「备注」。NOT NULL + DEFAULT ''：没写备注就存空串，
+--                 不用 null —— 备注是「可以没有内容」，不是「没有这一栏」。
+--   "isDeleted"   ★软删除标记（清单「余力加练」）。默认 false。
+--                 删除打卡时不真删这一行，只把它改成 true；查询时跳过。
+--                 好处：删错了还能找回（把值改回 false 即可）。
+--   "createdAt"   入库时间，DEFAULT now()。这列不由接口修改，是系统列的默认值。
+
+-- 部分唯一索引 checkins_unique_active_day：
+--   同 一台机体 + 同一天 只允许存在一条【未被删除】的打卡。
+--   为什么是「部分」索引而不是像 kit_prices 那样的普通唯一约束：
+--     普通 UNIQUE 会把被软删除的行也算进去 —— 结果就是「今天这条打卡删掉后，
+--     想重新打一次卡，会被数据库拦住，因为那条已删除的记录还占着位置」。
+--     加上 WHERE "isDeleted" = false 之后，唯一性只约束「还活着的行」，
+--     删掉的那条自动让出位置，逻辑才自洽。
+--   —— 这正是今天主题「删除为什么比新增更容易出事」的一个真实例子：
+--      加了软删除之后，原来那条唯一约束的含义被悄悄改变了，必须一起改。
+CREATE UNIQUE INDEX IF NOT EXISTS checkins_unique_active_day
+  ON public.checkins ("kitId", "checkinDate")
+  WHERE "isDeleted" = false;
+
+
+-- ----------------------------------------------------------------------------
+-- 执行完自检：此刻 public 模式里应当能看到 3 张表
+-- ----------------------------------------------------------------------------
+-- SELECT table_name FROM information_schema.tables
+--  WHERE table_schema = 'public' AND table_name IN ('kits', 'kit_prices', 'checkins')
+--  ORDER BY table_name;

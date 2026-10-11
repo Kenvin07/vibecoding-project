@@ -14,6 +14,11 @@ const EXCHANGE_RATE = 0.048;
 const PLATFORMS = ['pdd', 'taobao', 'xianyu'];
 const MARKET_TYPES = ['行货', '水货'];
 
+// 打卡完成状态：与 checkins.status 的 CHECK 约束保持一致（Day 22 · 契约 2.5）
+// 两个值就是 schema.sql 里 CHECK (status IN ('已完成','未完成')) 的那两个 ——
+// 接口这层的白名单必须和数据库的约束逐字对齐，不然会出现「接口放过了、数据库拒绝」。
+const CHECKIN_STATUSES = ['已完成', '未完成'];
+
 // 机体系列：读接口 series 参数只认这两个
 //（建表时故意没给 series 加约束，这份白名单归接口这层管）
 const SERIES_ALLOWED = ['MG', 'MGEX'];
@@ -23,6 +28,10 @@ const MAX_LIMIT = 500;
 
 // keyword 最长长度（防呆，不是防注入——输入根本不进查询语句）
 const MAX_KEYWORD = 30;
+
+// 打卡备注最长长度（Day 22）：备注是给人看的一句话，200 个字符够用。
+// 同样是防呆，不是防注入。
+const MAX_NOTE = 200;
 
 // 写接口密钥的请求头名字。
 // 代码里只有「头叫什么」，密钥的值来自环境变量 WRITE_API_KEY —— 值和代码分离，
@@ -36,9 +45,11 @@ module.exports = {
   EXCHANGE_RATE,
   PLATFORMS,
   MARKET_TYPES,
+  CHECKIN_STATUSES,
   SERIES_ALLOWED,
   MAX_LIMIT,
   MAX_KEYWORD,
+  MAX_NOTE,
   WRITE_KEY_HEADER,
   MAX_BODY,
 };

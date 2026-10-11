@@ -127,4 +127,73 @@ function pick(row, keys) {
 // ⚠️ 遗留说明（Day 19 原样搬来，未删）：
 //   gwBase 和 pick 这两个函数在重构前就没有任何一处调用它们 —— 是死代码。
 //   按项目规则「不擅自改动已有代码」，本次只搬家不删。要用要删，等你发话。
-module.exports = { get, post, gwBase, pick };
+
+// ---------------------------------------------------------------------------
+// 【Day 22 追加】PATCH 一张表：按条件改若干列，返回「改完之后的记录」
+// ---------------------------------------------------------------------------
+// 用途：PATCH /api/checkins/{id} 改一条打卡；DELETE /api/checkins/{id} 的软删除
+//       （把 "isDeleted" 置 true）也走它 —— 软删除本质就是「改一个字段」。
+//
+// 为什么单开一个 patch、不写一个通用的「发请求」函数：
+//   与 post 当初的理由一样 —— get / post 是 Day 17/18 已验收通过的代码，不动它们，
+//   就少一处「改坏了原来好的东西」的风险。多几行结构相似的代码，认了。
+//
+// 【怎么指定改哪一行】params 是「列名 → 值」的对象，如 { id: 'ck_0003' }。
+//   网关是 PostgREST 风格，过滤条件写在网址上：?id=eq.ck_0003。
+//   值一律经 encodeURIComponent 编码 —— 用户输入不直接进查询语句，防注入。
+async function patch(table, params, row) {
+  const envId = process.env.CLOUDBASE_ENV_ID;
+  const key = process.env.CLOUDBASE_API_KEY;
+  if (!envId || !key) throw new ConfigError();
+
+  const tablePath = table.replace(/^\/+/, '');
+  const url = 'https://' + envId + '.api.tcloudbasegateway.com/v1/rdb/rest/' +
+    tablePath + '?' + queryOf(params);
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        Authorization: 'Bearer ' + key,
+        'Content-Type': 'application/json; charset=utf-8',
+        Accept: 'application/json',
+        // 同 post：让网关把「改完之后的整行」回给我们，不然只能拿到状态码
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify(row),
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (err) {
+    console.error('[api] 网关修改失败（网络层）：', url, err && err.message);
+    throw new Error('gateway network error');
+  }
+  if (!res.ok) {
+    // 与 post 同款：写失败的响应体里带着「数据库为什么拒绝」，必须读出来，
+    // 上层才能按约束名 / SQLSTATE 把数据库腔翻译成人话。
+    const body = await res.text().catch(() => '');
+    console.error('[api] 网关修改被拒：', res.status, url, body.slice(0, 500));
+    const e = new Error('gateway http ' + res.status);
+    e.status = res.status;
+    e.body = body;
+    throw e;
+  }
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return null;
+  }
+}
+
+// 把「列名 → 值」拼成 PostgREST 的等值过滤串：{ id: 'ck_0003' } → 'id=eq.ck_0003'
+// 多个条件用 & 连接。每一次取值都过 encodeURIComponent。
+function queryOf(params) {
+  const parts = [];
+  for (const k of Object.keys(params)) {
+    parts.push(encodeURIComponent(k) + '=eq.' + encodeURIComponent(String(params[k])));
+  }
+  return parts.join('&');
+}
+
+module.exports = { get, post, patch, queryOf, gwBase, pick };

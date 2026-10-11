@@ -3,6 +3,8 @@
 // 产出：Day 19（第 3 周）· 板块② 分层重构
 //       原 index.js 的 readInt / readDate / readText / readEnum /
 //       isRealDate / nextPriceId 原样搬来，逻辑一字未改。
+//       Day 22 追加：nextCheckinId（打卡 id 生成）、readFlag（布尔开关参数），
+//       均为新增函数，原有几个一字未动。
 //
 // 共同套路：能读到就返回，读不到就给默认值，**格式不对就抛 HttpError(400)** ——
 // 抛出去由接入层统一翻成「400 + 中文提示」，所以这里只管判断，不管怎么回复。
@@ -79,4 +81,32 @@ function nextPriceId(rows) {
   return 'pr_' + String(max + 1).padStart(4, '0');
 }
 
-module.exports = { readInt, readDate, readText, readEnum, isRealDate, nextPriceId };
+// 生成下一个打卡 id（Day 22）：与 nextPriceId 同一套做法，前缀换成 ck_。
+// 为什么不复用 nextPriceId 加个前缀参数：那个函数是 Day 18 已验收的代码，
+// 不去动它；这里多十行重复代码，换来「原来好的东西一行没变」。
+function nextCheckinId(rows) {
+  let max = 0;
+  for (const r of rows) {
+    const m = /^ck_(\d+)$/.exec(String(r && r.id));
+    if (m) {
+      const n = Number(m[1]);
+      if (n > max) max = n;
+    }
+  }
+  return 'ck_' + String(max + 1).padStart(4, '0');
+}
+
+// 读一个可选的布尔开关参数（如 includeDeleted）。
+// 只有明确写 true / 1 才算真；其余（不传、false、空串）一律返回 fallback。
+// 为什么要这个函数：GET /api/checkins 默认要「跳过软删除的行」，
+// 只有显式带上 includeDeleted=true 时才把删掉的那些也列出来。
+function readFlag(sp, name, fallback) {
+  const raw = sp.get(name);
+  if (raw === null || raw === '') return fallback;
+  const v = String(raw).trim().toLowerCase();
+  if (v === 'true' || v === '1') return true;
+  if (v === 'false' || v === '0') return false;
+  return fallback;
+}
+
+module.exports = { readInt, readDate, readText, readEnum, isRealDate, nextPriceId, nextCheckinId, readFlag };

@@ -328,9 +328,322 @@ async function doSubmit() {
 }
 
 // ---------------------------------------------------------------------------
+// ④ 打卡记录 · 改 / 删（Day 22 新增）
+// ---------------------------------------------------------------------------
+// 【今天的主线就摆在这一段界面上：删除为什么比新增更容易出事】
+//   新增只要把表单填对就完事；删除多出两件必须由「人」来做的事：
+//     ① 动手之前先被问一句「你确定吗」—— 就是二次确认，专治手滑；
+//     ② 删完要让列表自己说话 —— 重新读一遍，那条真的不见了才算数。
+//   而今天用的是**软删除**：库里那行没消失，只是打了 "isDeleted" 标记。
+//   所以上面特地留了一个「把已删除的也列出来」的开关 —— 一勾就能看见
+//   「列表里删掉了」和「数据没了」是两件不同的事。这是软删除的全部意义。
+//
+// 【改接口的一条规矩这里也照做】空修改不算修改：一个字段都没动就别发请求。
+//   后端本来就拦（400），前端提前拦一下，少一次往返、也少一次误导。
+// ---------------------------------------------------------------------------
+
+let checkinRows = null;    // 最近一次读到的打卡（null = 还没读到 / 读失败）
+let checkinsError = null;  // 读取失败的原因（null = 没出错）
+let editId = null;         // 正在改哪一条（null = 没有）
+let confirmId = null;      // 正在等二次确认删哪一条（null = 没有）
+let lastChange = null;     // 最近一次操作的结果块（改前 → 改后 / 删除回执）
+let showDeleted = false;   // 列表是否把已软删除的也列出来
+let editBusy = false;      // 有请求在飞 —— 期间不渲染操作按钮，从根上防连点
+
+// 密钥复用 ③ 的输入框：同一页没必要让使用者输两遍。
+// ③ 的框里空着，就退回「本机浏览器记住的那一份」（同样是 localStorage，不进代码）。
+function writeKeyOf() {
+  const el = $("w-key");
+  if (el && el.value.trim()) return el.value.trim();
+  return (localStorage.getItem(KEY_STORE) || "").trim();
+}
+
+function findRow(id) {
+  if (!checkinRows) return null;
+  for (const r of checkinRows) if (r.id === id) return r;
+  return null;
+}
+
+// 改前 → 改后 对比表。今天要交的截图里要有「改之前与之后的值对比」，就是它。
+function diffTable(before, after) {
+  const rows = [];
+  if (before.status !== after.status) rows.push(["完成状态", before.status, after.status]);
+  if (before.note !== after.note) rows.push(["备注", before.note, after.note]);
+  if (!rows.length) rows.push(["（没有字段发生变化）", "", ""]);
+  return '<h3 class="check-h3">改前 → 改后（同一条记录 ' + esc(after.id) + "）</h3>" +
+    '<div class="table-wrap"><table><thead><tr><th>字段</th><th>改之前</th><th>改之后</th></tr></thead><tbody>' +
+    rows.map((r) => "<tr>" + r.map((c) => "<td>" + esc(c) + "</td>").join("") + "</tr>").join("") +
+    "</tbody></table></div>";
+}
+
+// 列表表格：每行右侧两个按钮，靠 data-act / data-id 交给事件委托认领
+// 显示层过滤：开关没勾时只列未删除的行（数据层在 loadCheckins 里已整表取回）
+function editTable() {
+  if (!checkinRows) {
+    return '<p class="check-note">当前没有打卡记录。</p>';
+  }
+  const shown = showDeleted ? checkinRows : checkinRows.filter((r) => r.isDeleted !== true);
+  if (!shown.length) {
+    return '<p class="check-note">当前没有可显示的打卡记录' +
+      (checkinRows.length
+        ? "（有 " + checkinRows.length + " 条都打着删除标记 —— 勾上方开关可查看）"
+        : "") +
+      "。</p>";
+  }
+  const rows = shown.map((r) => {
+    const gone = r.isDeleted === true;
+    const actCell = gone
+      ? '<span class="mono">已删除</span>'
+      : '<button type="button" class="check-btn" data-act="edit" data-id="' + esc(r.id) + '">改</button>' +
+        ' <button type="button" class="check-btn" data-act="del" data-id="' + esc(r.id) + '">删</button>';
+    return "<tr>" +
+      "<td>" + esc(r.id) + "</td>" +
+      "<td>" + esc(r.kitId) + "</td>" +
+      "<td>" + esc(r.checkinDate) + "</td>" +
+      "<td>" + esc(r.status) + "</td>" +
+      "<td>" + esc(r.note) + "</td>" +
+      "<td>" + actCell + "</td>" +
+      "</tr>";
+  }).join("");
+  return '<div class="table-wrap"><table><thead><tr>' +
+    ["id", "机体", "日期", "完成状态", "备注", "操作"].map((h) => "<th>" + esc(h) + "</th>").join("") +
+    "</tr></thead><tbody>" + rows + "</tbody></table></div>";
+}
+
+// 行内编辑区（点「改」之后出现）
+function editFormHtml(row) {
+  return '<h3 class="check-h3">修改 ' + esc(row.id) + "（" + esc(row.kitId) + " · " + esc(row.checkinDate) + "）</h3>" +
+    '<div class="check-form">' +
+      '<div class="calc-field"><label for="e-status">完成状态</label><select id="e-status">' +
+        ["已完成", "未完成"].map((s) =>
+          '<option value="' + esc(s) + '"' + (s === row.status ? " selected" : "") + ">" + esc(s) + "</option>"
+        ).join("") +
+      "</select></div>" +
+      '<div class="calc-field"><label for="e-note">备注</label>' +
+        '<input id="e-note" type="text" value="' + esc(row.note) + '" placeholder="例如：拼多多 238，比上周降了 12"></div>' +
+    "</div>" +
+    '<p class="check-note">可改字段只有这两个 —— 接口白名单里写死的（契约 4.13）。' +
+    "机体、日期、删除标记都不给改：前两个一改，这条记录的含义就变了（等于删旧的建新的），" +
+    "删除标记只能走「删」按钮。</p>" +
+    '<button type="button" class="check-btn primary" data-act="save" data-id="' + esc(row.id) + '">保存修改</button>' +
+    ' <button type="button" class="check-btn" data-act="cancel">取消</button>' +
+    '<div id="e-result"></div>';
+}
+
+// 二次确认区（点「删」之后出现，此刻【还没有】发任何请求）
+function deleteConfirmHtml(row) {
+  return '<div class="write-warn">' +
+    "⚠️ 确认要删除 <b>" + esc(row.id) + "</b>（" + esc(row.kitId) + " · " + esc(row.checkinDate) + "）这条打卡记录吗？" +
+    "<br>确认后它就不会再出现在上面的列表里，也不会再出现在 <span class=\"mono\">GET /api/checkins</span> 的返回里。" +
+    "<br>本期用的是<b>软删除</b>：库里那行不会消失，只是被打上 " + '<span class="mono">"isDeleted" = true</span> 标记，' +
+    "所以在 SQL 编辑器里仍然查得到 —— 「删掉了」和「数据没了」是两件事。" +
+    "</div>" +
+    '<button type="button" class="check-btn primary" data-act="del-yes" data-id="' + esc(row.id) + '">确认删除（不可撤销）</button>' +
+    ' <button type="button" class="check-btn" data-act="cancel">取消</button>';
+}
+
+// 整块重画。这是唯一的渲染出口 —— 状态变了就调它，界面永远等于当前状态。
+function renderEditBox() {
+  const box = $("edit-box");
+  if (!box) return;
+
+  // 公网版本：改和删都要密钥，所以这一段整个关掉
+  if (!isLocal()) {
+    $("edit-scope").textContent = "公网已隐藏";
+    box.innerHTML =
+      statusLine("wait", "打卡记录的改 / 删只在 localhost 下开启") +
+      '<p class="check-note">原因和上面 ③ 一样：改和删都是写操作，要带请求头 <span class="mono">X-API-KEY</span>。' +
+      "这把钥匙是服务端机密，不写进前端代码 —— 所以部署在公网上的这一份里，操作入口是关掉的。</p>";
+    return;
+  }
+
+  $("edit-scope").textContent = "仅本机";
+
+  if (checkinsError) {
+    box.innerHTML =
+      statusLine("bad", "读取打卡记录失败：" + checkinsError) +
+      '<p class="check-note">如果上面 ② 是绿的、这里却红了，问题多半在读接口或跨域这一层，把 F12 控制台里的报错一起记下来。</p>' +
+      '<button type="button" class="check-btn" data-act="reload">重试</button>';
+    return;
+  }
+
+  if (checkinRows === null) {
+    box.innerHTML = statusLine("wait", "正在请求 GET /api/checkins …");
+    return;
+  }
+
+  const alive = checkinRows.filter((r) => r.isDeleted !== true).length;
+  const gone = checkinRows.length - alive;
+
+  const head =
+    statusLine("ok", "库里共 " + checkinRows.length + " 条打卡记录：未删除 " + alive +
+      " 条、已删除 " + gone + " 条" +
+      (showDeleted ? "（当前含已删除一起列出）" : "（下方列表只显示未删除的）")) +
+    metrics([
+      ["未删除", alive + " 条"],
+      ["已删除（软删除标记）", gone + " 条"],
+      ["本次读取于", timeText()]
+    ]);
+
+  const bar =
+    '<label class="check-check"><input type="checkbox" id="e-showdel"' + (showDeleted ? " checked" : "") +
+    '> 把已删除的也列出来（<span class="mono">includeDeleted=true</span>）—— 用来证实「删除 ≠ 数据没了」</label>' +
+    '<button type="button" class="check-btn" data-act="reload">重新读取</button>';
+
+  // 请求在飞时不给操作按钮，避免连点（比如删除按钮被点两次，第二次必然 404）
+  let mid = "";
+  if (!editBusy) {
+    if (editId) {
+      const row = findRow(editId);
+      if (row) mid = editFormHtml(row);
+    } else if (confirmId) {
+      const row = findRow(confirmId);
+      if (row) mid = deleteConfirmHtml(row);
+    }
+  }
+
+  box.innerHTML = head + bar + editTable() + mid + (lastChange || "");
+}
+
+// 读列表。keepResult=true 表示「这次重读是某次操作后的刷新，别把结果块擦掉」。
+async function loadCheckins(keepResult) {
+  if (!keepResult) lastChange = null;
+  checkinsError = null;
+  try {
+    // 永远整表取回（含已删除的行）：顶部「未删除 / 已删除」两张统计卡才不会说谎。
+    // 「把已删除的也列出来」这个开关只控制【显示层】过滤（见 editTable），不再控制请求参数 ——
+    // 之前让它顺带控制请求，结果开关一关，统计里的「已删除」永远是 0，跟库里对不上。
+    const data = await API.getCheckins(true);
+    checkinRows = data.items;
+  } catch (e) {
+    checkinRows = null;
+    checkinsError = (e.status ? "HTTP " + e.status + "：" : "") + e.message +
+      (e.code ? "（error.code = " + e.code + "）" : "");
+  }
+  renderEditBox();
+}
+
+// 事件委托：整块只绑一次，「重画」时按钮跟着 innerHTML 换掉，监听器不用重绑
+function bindEditOnce() {
+  const box = $("edit-box");
+  if (!box || box.__editBound) return;
+  box.__editBound = true;
+  box.addEventListener("click", onEditClick);
+  box.addEventListener("change", onEditChange);
+}
+
+function onEditClick(e) {
+  const el = e.target;
+  if (!el || !el.getAttribute) return;
+  const act = el.getAttribute("data-act");
+  if (!act) return;
+  const id = el.getAttribute("data-id") || "";
+
+  if (act === "edit") { editId = id; confirmId = null; lastChange = null; renderEditBox(); return; }
+  if (act === "del") { confirmId = id; editId = null; lastChange = null; renderEditBox(); return; }
+  if (act === "cancel") { editId = null; confirmId = null; renderEditBox(); return; }
+  if (act === "reload") { loadCheckins(true); return; }
+  if (act === "save") { doSave(id); return; }
+  if (act === "del-yes") { doDelete(id); return; }
+}
+
+function onEditChange(e) {
+  const el = e.target;
+  if (el && el.id === "e-showdel") {
+    showDeleted = !!el.checked;
+    loadCheckins(true);
+  }
+}
+
+// 保存修改 → PATCH /api/checkins/{id}
+async function doSave(id) {
+  const key = writeKeyOf();
+  if (!key) {
+    lastChange = statusLine("bad", "还没填写接口密钥 —— 先在上面 ③ 的输入框里粘贴一次（或勾上「记住密钥」下次自动带上）。");
+    renderEditBox();
+    return;
+  }
+
+  const before = findRow(id);
+  if (!before) { editId = null; renderEditBox(); return; }
+
+  // 只把「真的变了」的字段发出去。一个都没变就干脆不发 ——
+  // 后端也认这条规矩（空修改回 400），前端先拦一道，少一次注定被拒的往返。
+  const payload = {};
+  const status = $("e-status").value;
+  const note = $("e-note").value.trim();
+  if (status !== before.status) payload.status = status;
+  if (note !== before.note) payload.note = note;
+  if (!Object.keys(payload).length) {
+    lastChange = statusLine("wait", "没有任何改动 —— 没发请求（空修改不算修改）");
+    editId = null;
+    renderEditBox();
+    return;
+  }
+
+  editBusy = true;
+  editId = null;
+  lastChange = statusLine("wait", "正在提交修改（PATCH /api/checkins/" + id + "）…");
+  renderEditBox();
+
+  try {
+    const item = await API.updateCheckin(id, payload, key);
+    lastChange =
+      statusLine("ok", "修改成功（HTTP 200）—— 库里那条已经变了") +
+      diffTable(before, item);
+    editBusy = false;
+    await loadCheckins(true);
+  } catch (e) {
+    editBusy = false;
+    lastChange =
+      statusLine("bad", "修改失败：" + e.message + (e.status ? "（HTTP " + e.status + "）" : "")) +
+      (e.code ? '<p class="check-note"><span class="mono">error.code = ' + esc(e.code) + "</span></p>" : "");
+    await loadCheckins(true);
+  }
+}
+
+// 确认删除 → DELETE /api/checkins/{id}（软删除）
+async function doDelete(id) {
+  const key = writeKeyOf();
+  if (!key) {
+    lastChange = statusLine("bad", "还没填写接口密钥 —— 先在上面 ③ 的输入框里粘贴一次。");
+    renderEditBox();
+    return;
+  }
+
+  editBusy = true;
+  confirmId = null;
+  lastChange = statusLine("wait", "正在删除（DELETE /api/checkins/" + id + "）…");
+  renderEditBox();
+
+  try {
+    const item = await API.deleteCheckin(id, key);
+    lastChange =
+      statusLine("ok", "删除成功（HTTP 200）—— " + item.id + " 已经从列表里消失") +
+      '<p class="check-note">它现在 <span class="mono">isDeleted = true</span>：列表默认不返回它。' +
+      "勾上上面那个「把已删除的也列出来」的开关，就能看见它还在库里 —— " +
+      "这正是软删除的意义：删错了还能找回来（在 SQL 编辑器里把 isDeleted 改回 false 即可）。</p>";
+    editBusy = false;
+    await loadCheckins(true);
+  } catch (e) {
+    editBusy = false;
+    lastChange =
+      statusLine("bad", "删除失败：" + e.message + (e.status ? "（HTTP " + e.status + "）" : "")) +
+      (e.code ? '<p class="check-note"><span class="mono">error.code = ' + esc(e.code) + "</span></p>" : "");
+    await loadCheckins(true);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 启动
 // ---------------------------------------------------------------------------
 loadHealth();
 loadData();
 renderWrite();
+
+// ④ 的逻辑：本机才发请求（公网那份连请求都不发，省掉一次注定被跨域拦下的失败）
+bindEditOnce();
+renderEditBox();
+if (isLocal()) loadCheckins();
+
 $("checked-at").textContent = "本次检查于 " + timeText() + "（刷新页面即重新检查）";

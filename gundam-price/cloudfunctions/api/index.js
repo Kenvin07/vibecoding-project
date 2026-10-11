@@ -1,4 +1,5 @@
-// index.js ｜ 接入层（第 3 周 · Day 17 读接口 + Day 18 写接口 + Day 19 分层重构）
+// index.js ｜ 接入层（第 3 周 · Day 17 读接口 + Day 18 写接口 + Day 19 分层重构
+//            + Day 22：checkins 四接口落地，带 id 的路径开始分流）
 // ===========================================================================
 // 【Day 19 做了什么】分层重构 —— 代码行为一个字没变，只把代码搬了家。
 //   以前这个文件 731 行，一个人干了 6 件事；现在它只剩一件事：
@@ -23,10 +24,14 @@
 //       常驻监听 9000 端口，一个「真的小网站服务器」。
 //
 // 路由表（一函数多接口）：
-//   GET  /api/health   健康检查（不依赖数据库，永远成功）
-//   GET  /api/kits     机体列表（首页用）
-//   GET  /api/prices   渠道价格记录列表
-//   POST /api/prices   新增一条价格记录（写接口，需请求头 X-API-KEY）
+//   GET    /api/health          健康检查（不依赖数据库，永远成功）
+//   GET    /api/kits            机体列表（首页用）
+//   GET    /api/prices          渠道价格记录列表
+//   POST   /api/prices          新增一条价格记录（写接口，需请求头 X-API-KEY）
+//   GET    /api/checkins        巡查打卡列表（Day 22 新增，默认跳过已软删除的行）
+//   POST   /api/checkins        新增一条打卡（Day 22 新增，写接口）
+//   PATCH  /api/checkins/{id}   修改一条打卡（Day 22 新增，写接口，兼容 PUT）
+//   DELETE /api/checkins/{id}   删除一条打卡（Day 22 新增，写接口，软删除）
 //
 // 统一响应形状（api-contract.md 第 1 节）由 lib/http.js 的四个 send* 提供：
 //   成功 { "ok": true,  "data": { ... }, "error": null }
@@ -43,6 +48,7 @@ const { ConfigError, HttpError } = require('./lib/errors');
 const { sendJson, sendOk, sendCreated, sendFail } = require('./lib/http');
 const kitsService = require('./services/kitsService');
 const pricesService = require('./services/pricesService');
+const checkinsService = require('./services/checkinsService');
 
 // 监听端口：云函数固定 9000（控制台「监听端口」配置项要跟它一致）；
 // 本机自测时可以用 PORT=9100 换个口，避免和别的东西打架。
@@ -55,11 +61,27 @@ const PORT = Number(process.env.PORT || 9000);
 //   云接入（HTTP 访问服务）配路由时，函数收到的路径可能是 /api/kits，
 //   也可能是被剥掉前缀后的 /kits，取决于控制台怎么配。
 //   两种都认，就少一个「明明部署好了却 404」的坑。
+//
+// 【Day 22 新增：带 id 的路径要分流】
+//   以前只认「以 /kits 或 /prices 结尾」，所以 /api/checkins/ck_0001 会被当成
+//   没登记的路径直接 404 —— 契约第 6 节待定项 11 登记的就是这件事，今天关掉它。
+//   现在多认一种形状：/checkins/{id}，把 id 从路径里抠出来一起返回，
+//   交给上层决定这一趟是 PATCH 还是 DELETE。
+//  【顺序有讲究】必须先判「以 /checkins 结尾」（列表），再判「/checkins/xxx」（单条）：
+//   反过来的话 /api/checkins 会先被单条那条规则吞掉。
 function routeOf(pathname) {
   const p = pathname.replace(/\/+$/, '') || '/'; // 去掉末尾斜杠
-  if (p === '/' || p.endsWith('/health')) return 'health';
-  if (p.endsWith('/kits')) return 'kits';
-  if (p.endsWith('/prices')) return 'prices';
+  if (p === '/' || p.endsWith('/health')) return { name: 'health' };
+  if (p.endsWith('/kits')) return { name: 'kits' };
+  if (p.endsWith('/prices')) return { name: 'prices' };
+  if (p.endsWith('/checkins')) return { name: 'checkins' };
+
+  // 单条打卡：/api/checkins/{id}
+  //   id 可能被浏览器编码过（%E2%80%A6 之类），decodeURIComponent 还原成原文；
+  //   它随后只作为「列 = 值」的等值条件传给网关，并且会被再编码一次，不构成注入。
+  const m = /\/checkins\/([^/]+)$/.exec(p);
+  if (m) return { name: 'checkinItem', id: decodeURIComponent(m[1]) };
+
   return null;
 }
 
@@ -78,38 +100,70 @@ const server = http.createServer(async (req, res) => {
     return sendFail(res, 404, 'NOT_FOUND', '接口不存在：' + url.pathname);
   }
 
-  // 只读接口只收 GET（和 HEAD，浏览器预览有时会发 HEAD）；
-  // 只有 /api/prices 的 POST 是写接口，其余照旧只读。
-  // 一函数多路由，方法要按路由分别判断，不能一刀切。
-  const isWrite = route === 'prices' && req.method === 'POST';
-  if (!isWrite && req.method !== 'GET' && req.method !== 'HEAD') {
-    const allow = route === 'prices' ? 'GET, POST' : 'GET';
-    res.setHeader('Allow', allow);
-    return sendFail(res, 405, 'METHOD_NOT_ALLOWED', '本接口只支持 ' + allow);
+  // 每个路由各自允许哪些方法。
+  // 【为什么不能一刀切】这是一个「一函数多接口」的函数：
+  //   /api/prices 收 GET + POST，/api/checkins 收 GET + POST，
+  //   而 /api/checkins/{id} 只收 PATCH / PUT / DELETE。
+  //   方法该不该放行，必须按路由分别判断。
+  const METHOD_BY_ROUTE = {
+    health: ['GET'],
+    kits: ['GET'],
+    prices: ['GET', 'POST'],
+    checkins: ['GET', 'POST'],
+    checkinItem: ['PATCH', 'PUT', 'DELETE'],
+  };
+
+  const allowed = METHOD_BY_ROUTE[route.name] || ['GET'];
+  // HEAD 是浏览器/预览偶尔会发的「只要响应头」的请求，按 GET 放行
+  const method = req.method === 'HEAD' ? 'GET' : req.method;
+  if (!allowed.includes(method)) {
+    res.setHeader('Allow', allowed.join(', '));
+    return sendFail(res, 405, 'METHOD_NOT_ALLOWED', '本接口只支持 ' + allowed.join(' / '));
   }
 
+  // 这个路由上「非 GET」的都算写接口 —— 写接口一律要在业务层过密钥这一关
+  const isWrite = method !== 'GET';
+
   try {
-    if (route === 'health') {
+    if (route.name === 'health') {
       // 与 Day 15 的 health 保持兼容（不依赖数据库，永远成功）
       return sendJson(res, 200, { ok: true, service: 'Gundam market situation' });
     }
 
-    if (isWrite) {
-      // 写接口：业务层自己验密钥、读体、校验、写库
-      const data = await pricesService.createPrice(req);
-      return sendCreated(res, data); // 201
+    // ---- 写接口：业务层自己验密钥、读体、校验、写库 ----
+    if (route.name === 'prices' && method === 'POST') {
+      return sendCreated(res, await pricesService.createPrice(req)); // 201
+    }
+    if (route.name === 'checkins' && method === 'POST') {
+      return sendCreated(res, await checkinsService.createCheckin(req)); // 201
+    }
+    if (route.name === 'checkinItem' && (method === 'PATCH' || method === 'PUT')) {
+      // PATCH 与 PUT 走同一个处理函数（契约 4.13 注明「兼容 PUT」）：
+      // 本期两者行为完全一致 —— 都只改请求体里带上来的字段。
+      return sendOk(res, await checkinsService.updateCheckin(req, route.id)); // 200
+    }
+    if (route.name === 'checkinItem' && method === 'DELETE') {
+      // 软删除，成功用 200 + 统一外壳（不是 204）：全站响应形状只有一套
+      return sendOk(res, await checkinsService.deleteCheckin(req, route.id)); // 200
     }
 
-    const data = route === 'kits'
+    // ---- 读接口 ----
+    const data = route.name === 'kits'
       ? await kitsService.fetchKits(url.searchParams)
-      : await pricesService.fetchPrices(url.searchParams);
+      : route.name === 'prices'
+        ? await pricesService.fetchPrices(url.searchParams)
+        : await checkinsService.fetchCheckins(url.searchParams);
     return sendOk(res, data);
   } catch (err) {
     // 参数类错误：400/401/404/409，把原因原样告诉调用方（这类消息是给开发者看的，不含敏感信息）
     if (err instanceof HttpError) {
       // 写接口的每一次被拒都记一条日志：以后排查「为什么这次没写进去」有迹可循
       if (isWrite) {
-        console.warn('[api] POST /api/prices 被拒：' + err.status + ' ' + err.code + ' - ' + err.message);
+        if (route.name === 'prices' && method === 'POST') {
+          console.warn('[api] POST /api/prices 被拒：' + err.status + ' ' + err.code + ' - ' + err.message);
+        } else {
+          console.warn('[api] ' + method + ' ' + url.pathname + ' 被拒：' + err.status + ' ' + err.code + ' - ' + err.message);
+        }
       }
       return sendFail(res, err.status, err.code, err.message);
     }
@@ -127,7 +181,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(
     '[api] 已启动，监听端口 ' + PORT +
-    '｜读：GET /api/kits、GET /api/prices；写：POST /api/prices（需 X-API-KEY）'
+    '｜读：GET /api/kits、GET /api/prices、GET /api/checkins' +
+    '；写：POST /api/prices、POST /api/checkins、PATCH|PUT|DELETE /api/checkins/{id}（需 X-API-KEY）'
   );
   // 只报「配没配」，绝不打印密钥本身 —— 日志也是会被人看到的地方
   console.log('[api] WRITE_API_KEY 已配置：' + (process.env.WRITE_API_KEY ? '是' : '否'));

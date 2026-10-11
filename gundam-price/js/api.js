@@ -134,5 +134,46 @@ const API = {
       if (e.status === 400) return { verdict: "ok", message: e.message };
       return { verdict: "other", status: e.status, message: e.message };
     }
+  },
+
+  // -------------------------------------------------------------------------
+  // checkins 巡查打卡表（Day 22 新增）
+  //   GET    /api/checkins         读列表（匿名可访问）
+  //   PATCH  /api/checkins/{id}    改 status / note（需 X-API-KEY）
+  //   DELETE /api/checkins/{id}    删（★软删除，需 X-API-KEY）
+  //
+  // 【为什么 id 要 encodeURIComponent】
+  //   id 会被拼进网址路径里。现在的 id 都是 ck_0001 这种安全写法，
+  //   但把「用户可控的东西」直接拼进 URL 是坏习惯 —— 万一以后 id 里出现
+  //   斜杠或中文，不转义就会把路径拼坏（/api/checkins/a/b）。
+  //   这里多一道，以后不用回头补。
+  // -------------------------------------------------------------------------
+
+  // GET /api/checkins —— 返回 { total, limit, offset, items: [...] }
+  // includeDeleted=true 时把已软删除的也列出来（用来证实「删了但数据还在」）。
+  getCheckins(includeDeleted) {
+    return this.get("/api/checkins" + (includeDeleted ? "?includeDeleted=true" : ""));
+  },
+
+  // PATCH /api/checkins/{id} —— payload 只认 { status } / { note } / 两者都有。
+  // 传白名单以外的字段后端会回 400 并说明，前端不拦，让后端当唯一裁判。
+  updateCheckin(id, payload, key) {
+    return this.request("/api/checkins/" + encodeURIComponent(id), {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-KEY": key
+      },
+      body: JSON.stringify(payload)
+    }).then((data) => data.item);
+  },
+
+  // DELETE /api/checkins/{id} —— 软删除。
+  // 成功返回被标记的那条记录（isDeleted: true），行本身还在库里。
+  deleteCheckin(id, key) {
+    return this.request("/api/checkins/" + encodeURIComponent(id), {
+      method: "DELETE",
+      headers: { "X-API-KEY": key }
+    }).then((data) => data.item);
   }
 };
