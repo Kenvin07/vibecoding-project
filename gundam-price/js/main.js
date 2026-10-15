@@ -28,12 +28,29 @@ function renderEmpty(listEl) {
 }
 
 // ④ 错误：读不到数据 / JSON 格式坏了（如多逗号、漏引号）
-function renderError(listEl) {
+// 【Day 23 改动】标题改成由三类翻译器给出的**具体**原因，
+//   而不是一律「数据加载失败」——
+//   现在「网络错」会说「连不上服务器，请检查网络后重试」，
+//   「服务端错」会说「服务器暂时无法处理请求，请稍后重试」。
+//   detail 参数由 render() 的 catch 里算好传进来；不传时退回通用文案（保持兼容）。
+function renderError(listEl, detail) {
+  const title = detail || "数据加载失败，请刷新重试";
   listEl.innerHTML =
     '<div class="state-box state-error">' +
-      '<div class="state-title">数据加载失败，请刷新重试</div>' +
+      '<div class="state-title">' + escText(title) + '</div>' +
       '<div class="state-desc">数据来自云端接口：先确认网络正常；若一直失败，多半是接口故障或跨域被拦，按 F12 看控制台的红字。</div>' +
     '</div>';
+}
+
+// 【Day 23 新增】把文本转义后再插进 innerHTML。
+// 为什么要加：错误文案里可能带上用户输入或后端回显的内容（如 id、字段名），
+// 直接拼进 HTML 有被注入的风险。这里统一转义，成本极低、收益明确。
+function escText(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 // ---------- 主流程：按 加载中 → 成功/空/错误 顺序推进 ----------
@@ -76,8 +93,10 @@ async function render() {
     }
   } catch (err) {
     updatedEl.textContent = "";
-    renderError(listEl); // ④ 错误
-    console.error(err);
+    // Day 23：交给 API.describe —— 它同时做两件事：
+    //   ① 把错误翻成三类中文人话（返回给我们显示）
+    //   ② 把原始技术细节写进 F12 控制台（排查用）
+    renderError(listEl, API.describe(err)); // ④ 错误
   }
 }
 

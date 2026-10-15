@@ -92,12 +92,23 @@ function renderDetailLoading(box) {
 }
 
 // ④ 错误：读不到数据 / JSON 坏了（与首页同一套状态盒样式）
-function renderDetailError(box) {
+// 【Day 23 改动】标题改为三类翻译器给出的具体原因（与首页口径完全一致）。
+function renderDetailError(box, detail) {
+  const title = detail || "数据加载失败，请刷新重试";
   box.innerHTML =
     '<div class="state-box state-error">' +
-      '<div class="state-title">数据加载失败，请刷新重试</div>' +
+      '<div class="state-title">' + escDetailText(title) + '</div>' +
       '<div class="state-desc">数据来自云端接口：先确认网络正常；若一直失败，多半是接口故障或跨域被拦，按 F12 看控制台的红字。</div>' +
     '</div>';
+}
+
+// 【Day 23 新增】转义后再插进 innerHTML（与首页同一做法，防注入）
+function escDetailText(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 // ③ 空：地址栏的 id 找不到对应机体（id 写错或数据里没有）
@@ -128,8 +139,8 @@ async function render() {
   try {
     data = await API.getKits(); // Day 20：改走公网接口（走 js/api.js）
   } catch (err) {
-    renderDetailError(box);
-    console.error(err);
+    // Day 23：统一走三类翻译 —— 显示人话，细节进 F12 控制台
+    renderDetailError(box, API.describe(err));
     return;
   }
 

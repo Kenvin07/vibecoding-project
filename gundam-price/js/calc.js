@@ -38,14 +38,25 @@ async function init() {
     }
   } catch (err) {
     // ④ 错误：读不到数据 / JSON 坏了 → 下拉框与结果区都给出明确反馈
-    els.kitSelect.innerHTML = '<option value="">数据加载失败，请刷新重试</option>';
+    // 【Day 23 改动】文案由三类翻译器给出，全站口径一致（与首页/详情页同款）。
+    //   同时 API.describe 会把技术细节写进 F12 控制台，排查能力不损失。
+    const human = API.describe(err);
+    els.kitSelect.innerHTML = '<option value="">' + escCalcText(human) + '</option>';
     els.result.innerHTML =
       '<div class="state-box state-error">' +
-        '<div class="state-title">数据加载失败，请刷新重试</div>' +
+        '<div class="state-title">' + escCalcText(human) + '</div>' +
         '<div class="state-desc">机体下拉框不可用，但你可以直接手动填官方日元价，计算功能不受影响。</div>' +
       '</div>';
-    console.error(err);
   }
+}
+
+// 【Day 23 新增】转义后再插进 innerHTML（与首页/详情页同一做法，防注入）
+function escCalcText(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 // 核心计算：官方价有效 → 算五算基准 + 三档分界；填了现价 → 再判档位
