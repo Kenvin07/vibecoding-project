@@ -44,7 +44,9 @@ TARGET="${1:-.}"
 # 要排除的文件：这个脚本自己 —— 它的注释和正则里就写着「密钥长什么样」的示例，
 #   不排除的话它会对着自己报警，白白多出几条假命中。
 #   （这是个通用的坑：凡是「搜索工具」本身，都要记得把它自己摘出去）
-EXCLUDES="--exclude-dir=.git --exclude-dir=node_modules --exclude=check-secrets.sh"
+# 【Day 25 补充】再加排除 *.log：发布前检查的日志会把命中行原样抄进文件，
+#   不排除的话第二次扫描就会命中上一次的日志 —— 工具产物污染自己的判据。
+EXCLUDES="--exclude-dir=.git --exclude-dir=node_modules --exclude=check-secrets.sh --exclude=*.log"
 
 # 密钥真值的正则，六个分支（用 | 连起来，命中任意一个就算）：
 #

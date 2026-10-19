@@ -1,0 +1,56 @@
+==================================================================
+高达行情 · 发布前检查（Day 25 · verify-project）
+执行时间：2026-10-19 19:45:18
+仓库版本：2825ec3   工作区：有 7 个未提交改动
+模式：全量（静态 10 项 + 公网 6 项）
+检查范围：/c/Users/13546/Desktop/vibecoding打卡project/gundam-price
+==================================================================
+
+[PASS] S1   密钥真值扫描 —— 有效命中 0 条（2 条为白名单文档示例）
+       证据: 原始命中 2 条，全部匹配 allowlist.txt（Day 23 自查清单里的示例值）
+       证据: 白名单示例：./docs/Day23-安全自查清单.md:35:直接搜这些词会命中两种完全不同的东西：一类是**变量名与文档说明**（`process.env.WR
+[PASS] S2   .env 未入库且被忽略
+       证据: 已跟踪的敏感文件：0 个（已排除 .env.example）
+       证据: 忽略规则：.gitignore:20:.env	.env
+[PASS] S3   Git 历史无密钥赋值
+       证据: 扫描 12729 行历史 diff：有效命中 0 条（白名单豁免 0 条文档示例）
+[PASS] S4   前端版本号一致（21 处引用，无缺失、无分歧）
+       证据: 每个本地 js/css 在 4 个页面里的 ?v= 唯一
+[FAIL] S5   有文件的版本号落后于它的改动
+       证据: js/api.js(v=20261008 < 最后改动 20261015) js/calc.js(v=20261008 < 最后改动 20261015) js/check.js(v=20261008 < 最后改动 20261011) js/detail
+       证据: 后果：浏览器继续用旧缓存，改了等于没改；把 ?v= 升到不早于最后改动日期，四个页面一起改
+[PASS] S6   本地 js/css 引用全部存在（10 个文件）
+       证据: 逐个 test -f 通过
+[PASS] S7   云函数环境变量清单一致（代码用到 4 个，模板全登记）
+       证据: 未登记变量：0 个；缺配分支 ConfigError → 500 明确报错
+[PASS] S8   未登记路径有兜底，前端错误分层完整
+       证据: 后端 index.js:99 route===null → 100:    return sendFail(res, 404, 'NOT_FOUND', '接口不存在：' + url.pathname);
+       证据: 前端 api.js:102 fetch 异常 → status=0 / NETWORK_ERROR
+[PASS] S9   防重复写入索引与软删除完整
+       证据: schema.sql:176 唯一索引 checkins_unique_active_day
+       证据: schema.sql:181 只约束未删除行；isDeleted 默认 false
+[PASS] S10  用户文案不含技术术语
+       证据: MESSAGES 三条固定文案：输入错 / 网络错 / 服务端错，无英文异常、无裸状态码
+       证据: 另有技术原话过滤器（Failed to fetch / TypeError …）兜住后端传上来的英文
+
+[PASS] N1   健康接口 200（不依赖数据库）
+       证据: GET /api/health → 200 {"ok":true,"service":"Gundam market situation"}
+[PASS] N2   三条读接口全部 200，数据基线吻合
+       证据: GET /api/kits → total=5（基线 5）
+       证据: GET /api/prices → total=14（基线 14）；GET /api/checkins → total=4
+[PASS] N3   未登记路径返回本项目外壳 404 NOT_FOUND
+       证据: GET /api/nope → HTTP 404 {"ok":false,"data":null,"error":{"code":"NOT_FOUND","message":"接口不存在：/api/nope"}}
+       证据: 说明：控制台 /api 兜底路由仍在（这条不在 Git 里，重建环境要重配）
+[PASS] N4   跨域白名单生效
+       证据: Origin: http://localhost:8000 → ACAO: http://localhost:8000
+       证据: 反例：Origin: https://evil.example.com → 无 ACAO 头（正确）
+[PASS] N5   写接口门锁有效（无密钥 → 401）
+       证据: POST /api/checkins 不带 X-API-KEY → 401 {"ok":false,"data":null,"error":{"code":"UNAUTHORIZED","message":"写接口需要密钥：请在请求头带上 X-API-KEY"}}
+[PASS] N6   单条路径方法白名单（GET → 405，Allow: PATCH, PUT, DELETE）
+       证据: GET /api/checkins/ck_0001 → 405 {"ok":false,"data":null,"error":{"code":"METHOD_NOT_ALLOWED","message":"本接口只支持 PATCH / PUT / DELETE"}}
+
+==================================================================
+发布前检查结果：15 PASS / 1 FAIL / 0 SKIP（共 16 项）
+结论：不通过 —— FAIL 项：S5
+处理规矩：一次只改一处，改完用同一条命令重跑；别同时改三个地方。
+==================================================================
