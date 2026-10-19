@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>五算计算器 ｜ 高达行情</title>
-  <link rel="stylesheet" href="css/style.css?v=20261008">
+  <link rel="stylesheet" href="css/style.css?v=20261019">
 </head>
 <body>
   <header>
@@ -54,6 +54,8 @@
 
   <footer>
     「五算」＝日本官方建议零售价 × 汇率的圈内经验标尺（本页汇率与线上接口保持一致）；档位标准与详情页相同：低于五算 = 捡漏，五算 ~ 1.2 倍 = 合理，超过 1.2 倍 = 溢价。对冷门限定款不适用。
+    <!-- Day 26：版本徽标。数字由 version.json 决定，发布/回滚后一眼能看出线上是哪一版 -->
+    <p class="app-version" data-app-version>版本读取中…</p>
   </footer>
 
   <!-- 复用卡片组件里的五算算法与档位判断（与详情页同一套口径）；Day 20 起数据走 api.js -->
@@ -61,5 +63,7 @@
   <script src="js/api.js?v=20261019"></script>
   <script src="js/components/kit-card.js?v=20261008"></script>
   <script src="js/calc.js?v=20261019"></script>
+  <!-- Day 26：版本徽标（读 version.json），与业务无关，放最后引 -->
+  <script src="js/version.js?v=20261019"></script>
 </body>
 </html>

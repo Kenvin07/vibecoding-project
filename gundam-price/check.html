@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>检查台 ｜ 高达行情</title>
-  <link rel="stylesheet" href="css/style.css?v=20261008">
+  <link rel="stylesheet" href="css/style.css?v=20261019">
 </head>
 <body>
   <header>
@@ -57,11 +57,15 @@
   <footer>
     数据来源：拼多多 / 淘宝 / 闲鱼的价格快照，由作者手动录入，每天更新 1 次；价格为录入时的快照，非实时报价，仅供参考，请以下单时平台实际价格为准。<br>
     本页是三周成果的运维入口：健康状态来自 <span class="mono">GET /api/health</span>，数据来自 <span class="mono">GET /api/kits</span> 与 <span class="mono">GET /api/prices</span>。
+    <!-- Day 26：版本徽标。数字由 version.json 决定，发布/回滚后一眼能看出线上是哪一版 -->
+    <p class="app-version" data-app-version>版本读取中…</p>
   </footer>
 
   <!-- Day 20：api.js 必须最先引（它是数据入口，报告页逻辑要用 API） -->
   <script src="js/error-message.js?v=20261015"></script>
   <script src="js/api.js?v=20261019"></script>
   <script src="js/check.js?v=20261019"></script>
+  <!-- Day 26：版本徽标（读 version.json），与业务无关，放最后引 -->
+  <script src="js/version.js?v=20261019"></script>
 </body>
 </html>

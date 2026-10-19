@@ -423,6 +423,17 @@ footer {
   line-height: 1.8;
 }
 
+/* Day 26：页脚版本徽标。发布后核对线上版本、回滚后确认退回成功，都看这一行。
+   等宽数字（tabular-nums）让 0.9.0 与 1.0.0 的字宽一致，截图对照时不跳动。 */
+.app-version {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 /* ---------- 五算计算器（calc.html） ---------- */
 .calc-field { margin-bottom: 12px; }
 .calc-field:last-child { margin-bottom: 0; }
