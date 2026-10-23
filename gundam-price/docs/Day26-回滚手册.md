@@ -52,13 +52,15 @@ cd C:\Users\13546\Desktop\vibecoding打卡project
 bash gundam-price/scripts/make-release.sh 0.9.0 efa8050
 ```
 
+**强烈建议：提前在桌面放一份短路径副本**（如 `Desktop\rollback-v090`）。上传弹窗里粘贴含中文的长路径容易「找不到文件」（2026-10-23 演练实测卡了约 5 分钟），短路径 + 纯鼠标导航（左侧栏点桌面 → 双击进入）最稳。副本内容以 `releases/v0.9.0` 为准，每次改包后记得同步。
+
 ### 步骤（每步都有「怎么知道这步成了」）
 
 | 步 | 做什么 | 怎么知道成了 | 计时点 |
 |---|---|---|---|
 | 1 | 判定要回滚，**先说一句「现在回滚」**（说给自己听，避免边查边改） | — | 开始计时 |
 | 2 | 终端启动等待：`bash gundam-price/scripts/check-live.sh --wait-for 0.9.0` | 屏幕开始每 3 秒打印「线上仍是 v1.0.0」 | — |
-| 3 | 控制台 <https://tcb.cloud.tencent.com/dev?envId=gundam-market-d7gnjqg3h1f2f156f#/static-hosting> → 网站部署 / 文件管理 → 上传文件夹 `releases/v0.9.0` 到**根目录**，同名覆盖 | 上传列表里出现 `version.json`、`index.html` 等文件，状态成功 | 上传开始 |
+| 3 | 控制台 <https://tcb.cloud.tencent.com/dev?envId=gundam-market-d7gnjqg3h1f2f156f#/static-hosting> → **文件管理**：先「上传文件」传 `releases/v0.9.0` 的 5 个根文件（`index.html`、`calc.html`、`detail.html`、`check.html`、`version.json`），再分别「上传文件夹」传 `js`、`css`、`img`、`data`，同名覆盖 | 根目录列表里 `version.json` 的更新时间变成刚才 | 上传开始 |
 | 4 | 回终端看第 2 步那条命令 | 打印「检测到 v0.9.0 ✔」+ 切换耗时 | **脚本给出的秒数 = 回滚生效耗时** |
 | 5 | 跑一次完整核验：`bash gundam-price/scripts/check-live.sh` | 首页 200、版本标记 0.9.0、接口 PASS | 验证开始 |
 | 6 | 浏览器打开首页 + 点一张卡片 | 卡片正常、详情正常（页脚**没有**版本徽标 = 旧包，正常） | 记录总耗时 |
@@ -67,6 +69,7 @@ bash gundam-price/scripts/make-release.sh 0.9.0 efa8050
 
 | 坑 | 为什么会发生 | 怎么防 |
 |---|---|---|
+| **整包上传变成子目录** | 「上传文件夹」把文件夹名当一级路径，选中 `v0.9.0` 会落成 `/v0.9.0/index.html`，根路径还是坏页面 | 根文件走「上传文件」，子目录一个个「上传文件夹」；传完先看根目录有没有 `version.json` |
 | **残留新文件** | 上传是「覆盖同名文件」，不是「清空后重传」。v1.0 新增的 `js/version.js` 会留在桶里 | 旧页面不引用它，无害；但要知道**线上桶里不是纯旧版**。要彻底干净就先清空再传（风险更大，不推荐在故障中做） |
 | **子目录错位** | 传成了 `/v0.9.0/index.html`，根路径还是坏页面 | 步骤 5 的「首页 200」就是这道闸；不对就重传，别怀疑包 |
 | **缓存假象** | 浏览器缓存了 v1.0 的 html/js | `Ctrl + Shift + R`；`check-live.sh` 带时间戳查询，不受缓存影响，以它为准 |
@@ -115,6 +118,8 @@ bash gundam-price/scripts/make-release.sh 0.9.0 efa8050
 | 6 | 手机端 | 手机浏览器打开站点 | 能打开、不错乱 |
 
 **六项全过才能说「回滚完成」**。只有 1、2 过，说明只是文件换了、业务没验 —— 那不算完成。
+
+> **文件真伪的验收口径（2026-10-23 演练教训）**：新旧版本文件名相同，HTTP 200 验不出「传的是哪版」。严谨判定要**逐字节比对**：`wc -c < 本地文件` 与 `curl -s 线上地址 | wc -c` 相等才算数。至少要抽验 `index.html`、`js/main.js`、`data/data.json` 三个。
 
 ---
 
