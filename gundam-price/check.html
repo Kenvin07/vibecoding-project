@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>检查台 ｜ 高达行情</title>
-  <link rel="stylesheet" href="css/style.css?v=20261019">
+  <link rel="stylesheet" href="css/style.css?v=20261026">
 </head>
 <body>
   <header>
@@ -39,18 +39,23 @@
     <!-- ③ 写入测试：本机专用。公网域名下这一段不会显示（密钥不能进前端） -->
     <div class="panel">
       <h2>③ 写入测试<span class="tag-local" id="write-scope">仅本机</span></h2>
+      <!-- Day 27：公网告知条 + 直达本机路径。修的是真人试用卡点：
+           公网打开本页看不到任何能写数据的地方，也不知道该去哪，只好自己乱点 -->
+      <div id="local-only-hint"></div>
       <div id="write-box"></div>
     </div>
 
     <!-- ④ 打卡记录 · 改 / 删（Day 22 新增）。同样本机专用：改和删都是写操作 -->
     <div class="panel">
       <h2>④ 打卡记录（改 / 删）<span class="tag-local" id="edit-scope">仅本机</span></h2>
+      <div id="local-only-hint-edit"></div>
       <div id="edit-box"></div>
     </div>
 
     <p class="check-note">
       本页只读部分（①②）任何人都能打开；③ 写入测试需要写接口密钥，
       所以只在 <span class="mono">localhost</span> 下开启 —— 密钥不写进代码、不进 Git。
+      想在公网上完成一次真实写入，请用本机启动的同一份页面（见上面③开头的说明）。
     </p>
   </main>
 
@@ -64,7 +69,7 @@
   <!-- Day 20：api.js 必须最先引（它是数据入口，报告页逻辑要用 API） -->
   <script src="js/error-message.js?v=20261015"></script>
   <script src="js/api.js?v=20261019"></script>
-  <script src="js/check.js?v=20261019"></script>
+  <script src="js/check.js?v=20261026"></script>
   <!-- Day 26：版本徽标（读 version.json），与业务无关，放最后引 -->
   <script src="js/version.js?v=20261019"></script>
 </body>

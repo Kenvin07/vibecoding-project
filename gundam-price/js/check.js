@@ -160,19 +160,56 @@ async function loadData() {
 }
 
 // ---------------------------------------------------------------------------
+// 公网告知条（Day 27）
+// 修的是真人试用暴露的卡点：公网打开本页，③④ 只剩一段「公网已隐藏」的说明，
+// 用户既不知道去哪写数据，也没有可以点的下一步，只好自己到处乱点。
+// 这条告知条只负责「告诉他下一步点哪」：写接口密钥依旧只在 localhost 才有输入框，
+// 公网代码里依旧不含密钥真值 —— 安全策略一行没改。
+// ---------------------------------------------------------------------------
+const LOCAL_HINT = {
+  write: "在你自己电脑上打开本机版（localhost）就能出现输入框和「写入一条记录」按钮。"
+    + "公网不显示这一段，是因为写接口要带密钥，密钥不进前端代码。",
+  edit: "在你自己电脑上打开本机版（localhost），这一块就会列出可改、可删的记录。"
+};
+
+function renderLocalOnlyHint(elId, kind) {
+  const box = $(elId);
+  if (!box) return;
+  if (isLocal()) { box.innerHTML = ""; return; }
+  box.innerHTML =
+    statusLine("wait", "当前是公网版本：这一段只能看，不能写") +
+    '<p class="check-note">' + esc(LOCAL_HINT[kind]) + "</p>" +
+    '<button type="button" class="check-btn" data-local-hint="' + esc(kind) + '">在哪打开本机版？点这里看一步说明</button>' +
+    '<div class="local-hint-detail" hidden></div>';
+  box.querySelector("[data-local-hint]").addEventListener("click", (e) => {
+    const d = box.querySelector(".local-hint-detail");
+    if (!d) return;
+    if (!d.hidden) { d.hidden = true; e.target.textContent = "在哪打开本机版？点这里看一步说明"; return; }
+    d.innerHTML = [
+      "<p class=\"check-note\">1. 在项目文件夹里双击 <span class=\"mono\">打开网页.bat</span>（会启动本机服务并打开浏览器）。</p>",
+      "<p class=\"check-note\">2. 地址栏变成 <span class=\"mono\">http://localhost:...</span> 之后，回到本页刷新，这一段就会出现输入框。</p>",
+      "<p class=\"check-note\">3. 本机版填的价格同样写进同一个数据库，网页端立刻能看到。</p>"
+    ].join("");
+    d.hidden = false;
+    e.target.textContent = "收起说明";
+  });
+}
+
+// ---------------------------------------------------------------------------
 // ③ 写入测试（只在本机开）
 // ---------------------------------------------------------------------------
 function renderWrite() {
   const box = $("write-box");
+  renderLocalOnlyHint("local-only-hint", "write");
 
   // 公网版本：整段关掉，并说清为什么 —— 这本身就是「密钥只走环境变量」的体现
   if (!isLocal()) {
     $("write-scope").textContent = "公网已隐藏";
     box.innerHTML =
-      statusLine("wait", "写入测试只在 localhost 下开启") +
+      statusLine("wait", "这一段在公网只做展示：不出现输入框，也没有写入按钮") +
       '<p class="check-note">原因：写接口要带请求头 <span class="mono">X-API-KEY</span>，这把钥匙是服务端机密。' +
       "把它写进前端代码，等于把钥匙挂在大门上，所以公网版本里这一段是关掉的 —— " +
-      "部署上去的这份代码里也不含任何密钥真值。</p>";
+      "部署上去的这份代码里也不含任何密钥真值。<b>要写数据，请按上面那条按钮的说明在本机打开。</b></p>";
     return;
   }
 
@@ -446,14 +483,16 @@ function deleteConfirmHtml(row) {
 function renderEditBox() {
   const box = $("edit-box");
   if (!box) return;
+  renderLocalOnlyHint("local-only-hint-edit", "edit");
 
   // 公网版本：改和删都要密钥，所以这一段整个关掉
   if (!isLocal()) {
     $("edit-scope").textContent = "公网已隐藏";
     box.innerHTML =
-      statusLine("wait", "打卡记录的改 / 删只在 localhost 下开启") +
+      statusLine("wait", "这一段在公网只做展示：看不到记录，也没有改 / 删按钮") +
       '<p class="check-note">原因和上面 ③ 一样：改和删都是写操作，要带请求头 <span class="mono">X-API-KEY</span>。' +
-      "这把钥匙是服务端机密，不写进前端代码 —— 所以部署在公网上的这一份里，操作入口是关掉的。</p>";
+      "这把钥匙是服务端机密，不写进前端代码 —— 所以部署在公网上的这一份里，操作入口是关掉的。" +
+      "<b>要改 / 删记录，请按上面那条按钮的说明在本机打开。</b></p>";
     return;
   }
 
